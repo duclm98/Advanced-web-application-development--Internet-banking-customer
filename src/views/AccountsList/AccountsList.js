@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {useState} from "react";
 // @material-ui/core
 import { makeStyles } from "@material-ui/core/styles";
 // core components
@@ -14,20 +14,16 @@ import styles from "assets/jss/material-dashboard-react/views/dashboardStyle.js"
 
 const useStyles = makeStyles(styles);
 
-export default function TransactionHistory() {
+export default function AccountsList() {
   const classes = useStyles();
-  const [tableName, setTableName] = useState('Giao dịch nhận tiền');
+  const [tableName, setTableName] = useState('Tài khoản thanh toán');
 
   const Handle1 = () =>{
-    setTableName('Giao dịch nhận tiền')
+    setTableName('Tài khoản thanh toán')
   }
 
   const Handle2 = () =>{
-    setTableName('Giao dịch chuyển khoản')
-  }
-
-  const Handle3 = () =>{
-    setTableName('Giao dịch thanh toán nhắc nợ')
+    setTableName('Tài khoản tiết kiệm')
   }
 
   return (
@@ -36,15 +32,14 @@ export default function TransactionHistory() {
         <GridItem xs={12} sm={12} md={12}>
           <Card>
             <CardHeader color="warning">
-              <h4 className={classes.cardTitleWhite}>Lịch sử giao dịch</h4>
+              <h4 className={classes.cardTitleWhite}>Danh sách tài khoản</h4>
             </CardHeader>
             <CardBody>
               <GridContainer>
                 <GridItem xs={12} sm={12} md={3}>
                   <br/>
-                  <Button color="primary" onClick={Handle1}>Giao dịch nhận tiền</Button>
-                  <Button color="primary" onClick={Handle2}>Giao dịch chuyển khoản</Button>
-                  <Button color="primary" onClick={Handle3}>Giao dịch thanh toán nhắc nợ</Button>
+                  <Button color="primary" style={{width: '200px'}} onClick={Handle1}>Tài khoản thanh toán</Button>
+                  <Button color="primary" style={{width: '200px'}} onClick={Handle2}>Tài khoản tiết kiệm</Button>
                 </GridItem>
                 <GridItem xs={12} sm={12} md={9}>
                   <h4>{tableName}</h4>
@@ -56,7 +51,7 @@ export default function TransactionHistory() {
                       ["2", "Minerva Hooper", "$23,789", "Curaçao"],
                       ["3", "Sage Rodriguez", "$56,142", "Netherlands"],
                       ["4", "Philip Chaney", "$38,735", "Korea, South"]
-                    ]}  
+                    ]}
                   />
                 </GridItem>
               </GridContainer>

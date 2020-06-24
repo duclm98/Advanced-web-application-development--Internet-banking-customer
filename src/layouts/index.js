@@ -31,13 +31,13 @@ const switchRoutes = (
         />
       );
     })}
-    <Redirect from="/" to="/customers-list" />
+    <Redirect from="/" to="/accounts-list" />
   </Switch>
 );
 
 const useStyles = makeStyles(styles);
 
-export default function Admin({ ...rest }) {
+export default function Layouts({ ...rest }) {
   // styles
   const classes = useStyles();
   // ref to help us initialize PerfectScrollbar on windows devices
@@ -89,6 +89,7 @@ export default function Admin({ ...rest }) {
       window.removeEventListener("resize", resizeFunction);
     };
   }, [mainPanel]);
+  
   return (
     <div className={classes.wrapper}>
       <Sidebar

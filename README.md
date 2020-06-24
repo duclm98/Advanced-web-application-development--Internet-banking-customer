@@ -1,3 +1,3 @@
-# Ứng dụng internet banking, phân hệ nhân viên
+# Ứng dụng internet banking, phân hệ khách hàng
 
 ## URL ứng dụng: 

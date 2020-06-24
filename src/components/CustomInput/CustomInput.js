@@ -23,7 +23,12 @@ export default function CustomInput(props) {
     labelProps,
     inputProps,
     error,
-    success
+    success,
+    onChange,
+    type,
+    value,
+    placeholder,
+    required
   } = props;
 
   const labelClasses = classNames({
@@ -60,6 +65,11 @@ export default function CustomInput(props) {
         }}
         id={id}
         {...inputProps}
+        onChange={onChange}
+        type={type}
+        value={value}
+        placeholder={placeholder}
+        required={required}
       />
       {error ? (
         <Clear className={classes.feedback + " " + classes.labelRootError} />

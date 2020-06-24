@@ -32,7 +32,7 @@ const styles = {
 
 const useStyles = makeStyles(styles);
 
-export default function CustomerCreation() {
+export default function Login() {
   const classes = useStyles();
   return (
     <div>
@@ -40,55 +40,21 @@ export default function CustomerCreation() {
         <GridItem xs={12} sm={12} md={12}>
           <Card>
             <CardHeader color="primary">
-              <h4 className={classes.cardTitleWhite}>Tạo tài khoản khách hàng</h4>
+              <h4 className={classes.cardTitleWhite}>Login</h4>
             </CardHeader>
             <CardBody>
               <GridContainer>
-                <GridItem xs={12} sm={12} md={4}>
+                <GridItem xs={12} sm={12} md={12}>
                   <CustomInput
-                    labelText="Số tài khoản"
+                    labelText="Tên đăng nhập"
                     id="username"
                     formControlProps={{
                       fullWidth: true
                     }}
-                    inputProps={{
-                      disabled: true
-                    }}
                   />
-                </GridItem>
-                <GridItem xs={12} sm={12} md={4}>
                   <CustomInput
-                    labelText="Địa chỉ email"
-                    id="email"
-                    formControlProps={{
-                      fullWidth: true
-                    }}
-                  />
-                </GridItem>
-                <GridItem xs={12} sm={12} md={4}>
-                  <CustomInput
-                    labelText="Tên"
-                    id="name"
-                    formControlProps={{
-                      fullWidth: true
-                    }}
-                  />
-                </GridItem>
-              </GridContainer>
-              <GridContainer>
-                <GridItem xs={12} sm={12} md={4}>
-                  <CustomInput
-                    labelText="Số điện thoại"
-                    id="phone"
-                    formControlProps={{
-                      fullWidth: true
-                    }}
-                  />
-                </GridItem>
-                <GridItem xs={12} sm={12} md={8}>
-                  <CustomInput
-                    labelText="Địa chỉ"
-                    id="address"
+                    labelText="Mật khẩu"
+                    id="password"
                     formControlProps={{
                       fullWidth: true
                     }}
@@ -97,7 +63,7 @@ export default function CustomerCreation() {
               </GridContainer>
             </CardBody>
             <CardFooter>
-              <Button color="primary">Tạo tài khoản</Button>
+              <Button color="primary">Đăng nhập</Button>
             </CardFooter>
           </Card>
         </GridItem>
