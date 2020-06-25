@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
+import { connect } from 'react-redux';
+import ReCAPTCHA from "react-google-recaptcha";
 // @material-ui/core components
 import { makeStyles } from "@material-ui/core/styles";
 // core components
@@ -10,6 +12,8 @@ import Card from "components/Card/Card.js";
 import CardHeader from "components/Card/CardHeader.js";
 import CardBody from "components/Card/CardBody.js";
 import CardFooter from "components/Card/CardFooter.js";
+
+import { action } from '../../stores/AccountStore';
 
 const styles = {
   cardCategoryWhite: {
@@ -32,12 +36,37 @@ const styles = {
 
 const useStyles = makeStyles(styles);
 
-export default function Login() {
+const Login = ({state, dispatch}) => {
   const classes = useStyles();
+
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [status, setStatus] = useState('');
+  const [reCAPTCHA, setReCAPTCHA] = useState();
+
+  const HandleLogin = () => {
+    if(reCAPTCHA){
+      dispatch(action.login({username,password}));
+      document.getElementById('username').value='';
+      document.getElementById('password').value='';
+      setUsername('');
+      setPassword('');
+      setReCAPTCHA(null);
+    } else{
+      setStatus('CAPTCHA không chính xác.')
+    }
+  }
+
+  function onChangeReCaptcha(value) {
+    setStatus('');
+    setReCAPTCHA(value);
+  }
+
   return (
-    <div>
+    <div style={{paddingTop: 150}}>
       <GridContainer>
-        <GridItem xs={12} sm={12} md={12}>
+        <GridItem xs={12} sm={12} md={4}></GridItem>
+        <GridItem xs={12} sm={12} md={4}>
           <Card>
             <CardHeader color="primary">
               <h4 className={classes.cardTitleWhite}>Login</h4>
@@ -51,19 +80,27 @@ export default function Login() {
                     formControlProps={{
                       fullWidth: true
                     }}
+                    onChange={(event)=>{setUsername(event.target.value)}}
                   />
                   <CustomInput
                     labelText="Mật khẩu"
                     id="password"
+                    type='password'
                     formControlProps={{
                       fullWidth: true
                     }}
+                    onChange={(event)=>{setPassword(event.target.value)}}
                   />
+                  <ReCAPTCHA
+                    sitekey="6LfrhKkZAAAAAPm06f6x6RF_ZHBNtc2dI1hIwpbK"
+                    onChange={onChangeReCaptcha}
+                  />  
+                  <h6 style={{color: 'red'}}>{status}</h6>
                 </GridItem>
               </GridContainer>
             </CardBody>
             <CardFooter>
-              <Button color="primary">Đăng nhập</Button>
+              <Button color="primary" onClick={HandleLogin}>Đăng nhập</Button>
             </CardFooter>
           </Card>
         </GridItem>
@@ -71,3 +108,11 @@ export default function Login() {
     </div>
   );
 }
+
+const mapStateToProps = state => {
+  return {
+    state: state
+  }
+}
+
+export default connect(mapStateToProps)(Login);

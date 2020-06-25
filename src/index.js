@@ -17,6 +17,9 @@
 */
 import React from "react";
 import ReactDOM from "react-dom";
+import { Provider } from "react-redux";
+import { createStore, applyMiddleware } from 'redux';
+import ReduxThunk from 'redux-thunk';
 import { createBrowserHistory } from "history";
 import { Router, Route, Switch, Redirect } from "react-router-dom";
 
@@ -25,14 +28,21 @@ import layout from "layouts";
 
 import "assets/css/material-dashboard-react.css?v=1.9.0";
 
+import accountReducer from './stores/AccountStore';
+const accountStore = createStore(accountReducer, applyMiddleware(ReduxThunk));
+
 const hist = createBrowserHistory();
 
 ReactDOM.render(
-  <Router history={hist}>
-    <Switch>
-      <Route path="/" component={layout} />
-      <Redirect from="/" to="/accounts-list" />
-    </Switch>
-  </Router>,
+  <React.StrictMode>
+    <Provider store={accountStore}>
+      <Router history={hist}>
+        <Switch>
+          <Route path="/" component={layout} />
+          <Redirect from="/" to="/accounts-list" />
+        </Switch>
+      </Router>
+    </Provider>
+  </React.StrictMode>,
   document.getElementById("root")
 );
