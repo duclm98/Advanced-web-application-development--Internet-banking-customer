@@ -40,7 +40,6 @@ export default function Transaction() {
   const [textFormOfFeePayment, setTextFormOfFeePayment] = useState('Người chuyển trả phí chuyển khoản');
   const [textButton, setTextButton]=useState('Tiếp tục');
   const [progress, setProgress] = useState(0);
-  const [isIncreasedProgress, setIsIncreasedProgress] = useState(true);
   const [status, setStatus]=useState('');
 
   const [srcAccountNumber] = useState();
@@ -51,67 +50,38 @@ export default function Transaction() {
   const [formOfFeePayment, setFormOfFeePayment]=useState(0);
   const [otp, setOtp] = useState();
 
-  const [disableStep1, setDisableStep1] = useState(false);
-  const [disableStep2, setDisableStep2] = useState(false);
-  const [disableStep3, setDisableStep3] = useState(false);
-
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
-
-  useEffect(() => {
-    if (!desAccountNumber) {
-      setIsIncreasedProgress(false);
-    } else {
-      setIsIncreasedProgress(true);
-    }
-  }, [desAccountNumber, desAccountName]);
-
-  useEffect(() => {
-    if (!money || !content || !formOfFeePayment) {
-      setIsIncreasedProgress(false);
-    } else {
-      setIsIncreasedProgress(true);
-    }
-  }, [money, content, formOfFeePayment]);
-
-  useEffect(() => {
-    if (!otp) {
-      setIsIncreasedProgress(false);
-    } else {
-      setIsIncreasedProgress(true);
-    }
-  }, [otp]);
   
   useEffect(() => {
     if (progress === 0) {
       setTextButton('Tiếp tục');
-      setDisableStep1(false);
-      setDisableStep2(true);
-      setDisableStep3(true);
     } else if (progress === 1) {
       setTextButton('Tiếp tục');
-      setDisableStep1(true);
-      setDisableStep2(false);
-      setDisableStep3(true);
     } else if (progress === 2) {
       setTextButton('Tiếp tục');
-      setDisableStep1(true);
-      setDisableStep2(true);
-      setDisableStep3(false);
-      setStatus('Vui lòng kiểm tra email để lấy OTP');
     } else if (progress === 3){
       setTextButton('Chuyển ngay');
-      setDisableStep1(true);
-      setDisableStep2(true);
-      setDisableStep3(true);
     }
   }, [progress]);
 
-  const HandleMainButtonClick = () =>{
-    if(progress<3 && isIncreasedProgress){
+  const HandleMainButtonClick = () => {
+    if (progress < 3) {
+      if (progress === 1 && (!desAccountNumber)) {
+        setStatus('Vui lòng nhập số tài khoản cần chuyển đến');
+        return;
+      } else if (progress === 2 && (!money || !content)) {
+        setStatus('Vui lòng nhập đầy đủ thông tin cần thiết');
+        return;
+      }
+      setStatus('');
       setProgress(progress + 1);
-    } else if(progress===3 && isIncreasedProgress){
-
+    } else {
+      if (progress === 3 && !otp){
+        setStatus('Vui lòng nhập đầy đủ thông tin cần thiết');
+        return;
+      }
+      setStatus('');
     }
   }
 
@@ -133,6 +103,8 @@ export default function Transaction() {
                 </GridItem>
                 <GridItem xs={12} sm={12} md={9}>
                   <h4>{transactionType}</h4>
+
+                  {progress === 0 ? (
                   <GridContainer>
                     <GridItem xs={12} sm={12} md={4}>
                       <CustomInput
@@ -147,6 +119,9 @@ export default function Transaction() {
                       />
                     </GridItem>
                   </GridContainer>
+                  ):(null)}
+
+                  {progress === 1 ?(
                   <GridContainer>
                     <GridItem xs={12} sm={12} md={4}>
                       <CustomInput
@@ -155,9 +130,10 @@ export default function Transaction() {
                         formControlProps={{
                           fullWidth: true
                         }}
+                        value={desAccountNumber}
                         onChange={(event)=>{setDesAccountNumber(event.target.value)}}
                         inputProps={{
-                          disabled: disableStep1
+                          disabled: false
                         }}
                       />
                     </GridItem>
@@ -168,12 +144,16 @@ export default function Transaction() {
                         formControlProps={{
                           fullWidth: true
                         }}
+                        value={desAccountName}
                         inputProps={{
                           disabled: true
                         }}
                       />
                     </GridItem>
                   </GridContainer>
+                  ):(null)}
+
+                  {progress === 2 ? (
                   <GridContainer>
                     <GridItem xs={12} sm={12} md={4}>
                       <CustomInput
@@ -182,9 +162,8 @@ export default function Transaction() {
                         formControlProps={{
                           fullWidth: true
                         }}
-                        inputProps={{
-                          disabled: disableStep2
-                        }}
+                        type='number'
+                        value={money}
                         onChange={(event)=>{setMoney(event.target.value)}}
                       />
                     </GridItem>
@@ -195,16 +174,17 @@ export default function Transaction() {
                         formControlProps={{
                           fullWidth: true
                         }}
-                        inputProps={{
-                          disabled: disableStep2
-                        }}
+                        value={content}
                         onChange={(event)=>{setContent(event.target.value)}}
                       />
                     </GridItem>
                   </GridContainer>
+                  ):(null)}
+
+                  {progress === 2 ?(
                   <GridContainer style={{paddingTop: 20}}>
                     <GridItem xs={12} sm={12} md={4}>
-                      <Button aria-controls="fade-menu" aria-haspopup="true" disabled={disableStep2} onClick={(event)=>{setAnchorEl(event.currentTarget)}}>
+                      <Button aria-controls="fade-menu" aria-haspopup="true" onClick={(event)=>{setAnchorEl(event.currentTarget)}}>
                         {textFormOfFeePayment}
                       </Button>
                       <Menu
@@ -220,6 +200,9 @@ export default function Transaction() {
                       </Menu>
                     </GridItem>
                   </GridContainer>
+                  ):(null)}
+
+                  {progress === 3 ?(
                   <GridContainer>
                     <GridItem xs={12} sm={12} md={4}>
                       <CustomInput
@@ -228,18 +211,26 @@ export default function Transaction() {
                         formControlProps={{
                           fullWidth: true
                         }}
-                        inputProps={{
-                          disabled: disableStep3
-                        }}
+                        value={otp}
                         onChange={(event)=>{setOtp(event.target.value)}}
                       />
                     </GridItem>
                   </GridContainer>
+                  ):(null)}
+
+                  {progress === 3 ?(
+                    <GridContainer>
+                      <GridItem xs={12} sm={12} md={6}>
+                        <h6 style={{color:'green'}}>Vui lòng kiểm tra email để lấy mã xác thực</h6>
+                      </GridItem>
+                    </GridContainer>
+                  ):(null)}
+
                   <GridContainer>
                     <GridItem xs={12} sm={12} md={12}>
-                      <h6 style={{color:'green'}}>{status}</h6>
+                      <h6 style={{color:'red'}}>{status}</h6>
                       {progress!==0?(
-                        <Button color="primary" onClick={()=>{if(progress>0){setProgress(progress-1)}}}>Trở lại</Button>
+                        <Button color="primary" onClick={()=>{if(progress>0){setProgress(progress-1);setStatus('')}}}>Trở lại</Button>
                       ):(null)}
                       < Button color = "primary" onClick={HandleMainButtonClick}>
                         {textButton}
