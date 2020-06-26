@@ -19,11 +19,13 @@
 import SendOutlined from '@material-ui/icons/SendOutlined';
 import LibraryBooks from "@material-ui/icons/LibraryBooks";
 import ListAltOutlined from '@material-ui/icons/ListAltOutlined';
+import SettingsApplicationsOutlined from '@material-ui/icons/SettingsApplicationsOutlined';
 
 // core components/views for Admin layout
 import AccountsListPage from 'views/AccountsList/AccountsList.js';
 import ReceiversListPage from 'views/ReceiversList/ReceiversList.js';
 import TransactionPage from 'views/Transaction/Transaction.js';
+import SettingPage from 'views/Setting/Setting.js';
 
 const dashboardRoutes = [
   {
@@ -43,6 +45,12 @@ const dashboardRoutes = [
     name: "Chuyển khoản",
     icon: SendOutlined,
     component: TransactionPage,
+  },
+  {
+    path: "/setting",
+    name: "Cài đặt",
+    icon: SettingsApplicationsOutlined,
+    component: SettingPage,
   },
 ];
 

@@ -1,39 +1,30 @@
-import axios from 'axios';
-import {
-    REACT_APP_BASE_BACKEND_URL
-} from '../variables/React';
+import * as localStorageVariable from '../variables/LocalStorage';
+import instance from '../services/AxiosServices';
 
-import * as localStorageService from '../services/LocalStorageServices';
-
-const instance = axios.create({
-    baseURL: REACT_APP_BASE_BACKEND_URL,
-    timeout: 10000,
-    headers: {
-        'x_authorization': localStorageService.accessToken
-    }
-});
-
-// 
+// Lấy lại access token sau mỗi 9 phút (vì thời gian tồn tại tối đa của access token la 10 phút)
 const getRefreshToken = async () => {
     try {
+
         const response = await instance.post('auth/refresh', {
-            refreshToken: localStorageService.refreshToken
+            refreshToken: localStorage.getItem(localStorageVariable.storeRefreshToken)
         })
         console.log(response.data)
-        localStorage.setItem(localStorageService.storeAccessToken, response.data.accessToken);
+        localStorage.setItem(localStorageVariable.storeAccessToken, response.data.accessToken);
     } catch (error) {
         console.log(error);
     }
 }
+getRefreshToken()
 setInterval(getRefreshToken, 540000);
 
 export const action = {
     login: (account) => async dispatch => {
+        instance.defaults.headers.common['x_authorization'] = localStorage.getItem(localStorageVariable.storeAccessToken);
         const response = await instance.post('auth/login', account);
 
-        localStorage.setItem(localStorageService.storeAccessToken, response.data.accessToken);
-        localStorage.setItem(localStorageService.storeRefreshToken, response.data.refreshToken);
-        localStorage.setItem(localStorageService.storeAccount, JSON.stringify(response.data.account));
+        localStorage.setItem(localStorageVariable.storeAccessToken, response.data.accessToken);
+        localStorage.setItem(localStorageVariable.storeRefreshToken, response.data.refreshToken);
+        localStorage.setItem(localStorageVariable.storeAccount, JSON.stringify(response.data.account));
 
         dispatch({
             type: 'LOGIN',
@@ -50,9 +41,9 @@ export const action = {
 }
 
 const initialState = {
-    accessToken: localStorageService.accessToken,
-    refreshToken: localStorageService.refreshToken,
-    account: localStorageService.account,
+    accessToken: localStorage.getItem(localStorageVariable.storeAccessToken),
+    refreshToken: localStorage.getItem(localStorageVariable.storeRefreshToken),
+    account: localStorage.getItem(localStorageVariable.storeAccount),
 };
 
 export default (state = initialState, action) => {
