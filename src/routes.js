@@ -27,7 +27,7 @@ import TransactionPage from 'views/Transaction/Transaction.js';
 
 const dashboardRoutes = [
   {
-    path: "/accounts-list",
+    path: "/home",
     name: "Danh sách tài khoản",
     icon: LibraryBooks,
     component: AccountsListPage,

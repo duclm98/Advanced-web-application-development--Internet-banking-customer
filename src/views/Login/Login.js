@@ -13,7 +13,7 @@ import CardHeader from "components/Card/CardHeader.js";
 import CardBody from "components/Card/CardBody.js";
 import CardFooter from "components/Card/CardFooter.js";
 
-import { action } from '../../stores/AccountStore';
+import { action } from '../../redux/AccountRedux';
 
 const styles = {
   cardCategoryWhite: {

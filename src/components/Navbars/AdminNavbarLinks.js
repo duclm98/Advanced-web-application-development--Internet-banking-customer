@@ -21,7 +21,7 @@ import Button from "components/CustomButtons/Button.js";
 
 import styles from "assets/jss/material-dashboard-react/components/headerLinksStyle.js";
 
-import { action } from '../../stores/AccountStore';
+import { action } from '../../redux/AccountRedux';
 
 const useStyles = makeStyles(styles);
 

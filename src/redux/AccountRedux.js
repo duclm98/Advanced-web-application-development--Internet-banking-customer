@@ -13,6 +13,20 @@ const instance = axios.create({
     }
 });
 
+// 
+const getRefreshToken = async () => {
+    try {
+        const response = await instance.post('auth/refresh', {
+            refreshToken: localStorageService.refreshToken
+        })
+        console.log(response.data)
+        localStorage.setItem(localStorageService.storeAccessToken, response.data.accessToken);
+    } catch (error) {
+        console.log(error);
+    }
+}
+setInterval(getRefreshToken, 540000);
+
 export const action = {
     login: (account) => async dispatch => {
         const response = await instance.post('auth/login', account);

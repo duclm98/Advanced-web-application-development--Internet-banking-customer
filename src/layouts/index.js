@@ -34,7 +34,7 @@ const switchRoutes = (
         />
       );
     })}
-    <Redirect from="/" to="/accounts-list" />
+    <Redirect from="/" to="/home" />
   </Switch>
 );
 

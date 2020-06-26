@@ -28,7 +28,7 @@ import layout from "layouts";
 
 import "assets/css/material-dashboard-react.css?v=1.9.0";
 
-import accountReducer from './stores/AccountStore';
+import accountReducer from './redux/AccountRedux';
 const accountStore = createStore(accountReducer, applyMiddleware(ReduxThunk));
 
 const hist = createBrowserHistory();
@@ -39,7 +39,7 @@ ReactDOM.render(
       <Router history={hist}>
         <Switch>
           <Route path="/" component={layout} />
-          <Redirect from="/" to="/accounts-list" />
+          <Redirect from="/" to="/home" />
         </Switch>
       </Router>
     </Provider>
