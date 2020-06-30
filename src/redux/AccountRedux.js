@@ -3,15 +3,13 @@ import instance from '../services/AxiosServices';
 
 // Lấy lại access token sau mỗi 9 phút (vì thời gian tồn tại tối đa của access token la 10 phút)
 const getRefreshToken = async () => {
-    try {
-
-        const response = await instance.post('auth/refresh', {
-            refreshToken: localStorage.getItem(localStorageVariable.storeRefreshToken)
-        })
-        console.log(response.data)
+    instance.defaults.headers.common['x_authorization'] = localStorage.getItem(localStorageVariable.storeAccessToken);
+    const response = await instance.post('auth/refresh', {
+        refreshToken: localStorage.getItem(localStorageVariable.storeRefreshToken) 
+    })
+    console.log(response.data)
+    if (response.data.status === 200) {
         localStorage.setItem(localStorageVariable.storeAccessToken, response.data.accessToken);
-    } catch (error) {
-        console.log(error);
     }
 }
 getRefreshToken()

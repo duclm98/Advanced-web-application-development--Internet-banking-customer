@@ -50,18 +50,12 @@ const Setting = ({ state, dispatch }) => {
     if (newPassword !== confirmNewPassword) {
       return setStatus('Mật khẩu không khớp.');
     }
-    try {
-      instance.defaults.headers.common['x_authorization'] = localStorage.getItem(storeAccessToken);
-      const response = await instance.post('accounts/change-password', {
-        oldPassword,
-        newPassword
-      });
-      return setStatus(response.data);
-    } catch (error) {
-      console.log(error);
-      return setStatus('Có lỗi trong quá trình đổi mật khẩu, vui lòng thử lại.');
-    }
-
+    instance.defaults.headers.common['x_authorization'] = localStorage.getItem(storeAccessToken);
+    const response = await instance.post('accounts/change-password', {
+      oldPassword,
+      newPassword
+    });
+    setStatus(response.data.msg);
   }
 
   return (
