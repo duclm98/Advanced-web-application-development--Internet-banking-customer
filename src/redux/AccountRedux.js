@@ -10,7 +10,7 @@ const getRefreshToken = async () => {
         } = await instance.post('auth/refresh', {
             refreshToken: localStorage.getItem(localStorageVariable.storeRefreshToken)
         })
-        localStorage.setItem(localStorageVariable.storeAccessToken, data.accessToken);   
+        localStorage.setItem(localStorageVariable.storeAccessToken, data.accessToken);
     } catch (error) {
         console.log(error.response.data);
     }
@@ -52,6 +52,21 @@ export const action = {
         dispatch({
             type: 'LOGOUT',
         })
+    },
+    getAccount: (accountNumberFromBody) => async dispatch => {
+        const accountNumber = accountNumberFromBody ? accountNumberFromBody : '0000000000000';
+        instance.defaults.headers.common['x_authorization'] = localStorage.getItem(localStorageVariable.storeAccessToken);
+        try {
+            const {
+                data
+            } = await instance.get(`accounts/${accountNumber}`);
+            dispatch({
+                type: 'GET_ACCOUNT',
+                payload: data
+            })
+        } catch (error) {
+            
+        }
     }
 }
 
@@ -80,6 +95,11 @@ export default (state = initialState, action) => {
             accessToken: null,
             refreshToken: null,
             account: null
+        }
+    } else if (action.type === 'GET_ACCOUNT') {
+        return {
+            ...state,
+            account: action.payload
         }
     }
     return state;

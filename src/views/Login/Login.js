@@ -14,7 +14,6 @@ import CardBody from "components/Card/CardBody.js";
 import CardFooter from "components/Card/CardFooter.js";
 
 import { action } from '../../redux/AccountRedux';
-import { storeAccessToken } from '../../variables/LocalStorage';
 import instance from '../../services/AxiosServices';
 
 const styles = {
