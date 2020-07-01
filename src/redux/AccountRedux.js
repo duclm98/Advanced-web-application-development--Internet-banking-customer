@@ -59,21 +59,68 @@ export const action = {
         try {
             const {
                 data
-            } = await instance.get(`accounts/${accountNumber}`);
+            } = await instance.get(`accounts/accountNumber/${accountNumber}`);
             dispatch({
                 type: 'GET_ACCOUNT',
                 payload: data
             })
         } catch (error) {
+
+        }
+    },
+    getReceivers: () => async dispatch => {
+        instance.defaults.headers.common['x_authorization'] = localStorage.getItem(localStorageVariable.storeAccessToken);
+        const {
+            data
+        } = await instance.get('accounts/receivers');
+        dispatch({
+            type: 'GET_RECEIVERS',
+            payload: data
+        })
+    },
+    addReceiver: (receiver) => async dispatch => {
+        instance.defaults.headers.common['x_authorization'] = localStorage.getItem(localStorageVariable.storeAccessToken);
+        try {
+            const {
+                data
+            } = await instance.post(`accounts/receivers`, receiver);
+            dispatch({
+                type: 'ADD_RECEIVER_SUCCESS',
+                payload: data
+            })
+        } catch (error) {
+            dispatch({
+                type: 'ADD_RECEIVER_FAILED',
+                payload: {
+                    msg: error.response.data
+                }
+            })
+        }
+    },
+    deleteReceivers: (receiverIDs) => async dispatch => {
+        instance.defaults.headers.common['x_authorization'] = localStorage.getItem(localStorageVariable.storeAccessToken);
+        try {
+            const {
+                data
+            } = await instance.post(`accounts/receivers-delete`, {
+                receiverIDs
+            });
+            dispatch({
+                type: 'DELETE_RECEIVERS_SUCCESS',
+                payload: data
+            })
+        } catch (error) {
             
         }
-    }
+    },
 }
 
 const initialState = {
     accessToken: localStorage.getItem(localStorageVariable.storeAccessToken),
     refreshToken: localStorage.getItem(localStorageVariable.storeRefreshToken),
     account: localStorage.getItem(localStorageVariable.storeAccount),
+    receivers: [],
+    changeReceivers: true
 };
 
 export default (state = initialState, action) => {
@@ -100,6 +147,30 @@ export default (state = initialState, action) => {
         return {
             ...state,
             account: action.payload
+        }
+    } else if (action.type === 'GET_RECEIVERS') {
+        return {
+            ...state,
+            changeReceivers: false,
+            receivers: action.payload
+        }
+    } else if (action.type === 'ADD_RECEIVER_SUCCESS') {
+        const receiver = action.payload;
+        return {
+            ...state,
+            changeReceivers: true,
+            receivers: [...state.receivers, receiver]
+        }
+    } else if (action.type === 'ADD_RECEIVER_FAILED') {
+        return {
+            ...state,
+            msg: action.payload.msg
+        }
+    } else if (action.type === 'DELETE_RECEIVERS_SUCCESS'){
+        return {
+            ...state,
+            changeReceivers: true,
+            receivers: action.payload
         }
     }
     return state;
