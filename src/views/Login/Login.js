@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { connect } from 'react-redux';
 import ReCAPTCHA from "react-google-recaptcha";
 // @material-ui/core components
@@ -38,7 +38,7 @@ const styles = {
 
 const useStyles = makeStyles(styles);
 
-const Login = ({state, dispatch}) => {
+const Login = ({msg, dispatch}) => {
   const classes = useStyles();
 
   const [process, setProcess] = useState(0);
@@ -52,6 +52,16 @@ const Login = ({state, dispatch}) => {
   const [confirmPasswordResetting, setConfirmPasswordResetting] = useState('');
   const [statusSendOtp, setStatusSendOtp] = useState('');
   const [statusResetPassword, setStatusResetPassword] = useState('');
+
+  // Nếu có lỗi trả về sau khi đăng nhập
+  useEffect(() => {
+    if (msg) {
+      setStatus(msg);
+      setUsername('');
+      setPassword('');
+      setReCAPTCHA(null);
+    }
+  }, [msg]);
 
   const HandleLogin = () => {
     if(reCAPTCHA){
@@ -75,29 +85,30 @@ const Login = ({state, dispatch}) => {
   }
 
   const HandleSendOtp = async () => {
-    const response = await instance.post('accounts/send-confirmative-code', {
-      email
-    });
-    if (response.data.status !== 200) {
-      return setStatusSendOtp(response.data.msg);
+    try {
+      await instance.post('accounts/send-confirmative-code', {
+        email
+      });
+      return setProcess(2);
+    } catch (error) {
+      return setStatusSendOtp(error.response.data);
     }
-    return setProcess(2);
   }
 
   const HandleResetPassword = async () => {
     if(passwordResetting!==confirmPasswordResetting){
       return setStatusResetPassword('Mật khẩu không khớp');
     }
-    const response = await instance.post('accounts/reset-password', {
-      email,
-      otp,
-      password: passwordResetting
-    });
-    console.log(response.data)
-    if (response.data.status !== 200) {
-      return setStatusResetPassword(response.data.msg);
+    try {
+      await instance.post('accounts/reset-password', {
+        email,
+        otp,
+        password: passwordResetting
+      });
+      setProcess(0);
+    } catch (error) {
+      return setStatusResetPassword(error.response.data);
     }
-    setProcess(0);
   }
 
   function onChangeReCaptcha(value) {
@@ -234,7 +245,7 @@ const Login = ({state, dispatch}) => {
 
 const mapStateToProps = state => {
   return {
-    state: state
+    msg: state.msg
   }
 }
 

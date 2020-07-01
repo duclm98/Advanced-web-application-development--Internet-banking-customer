@@ -51,11 +51,15 @@ const Setting = ({ state, dispatch }) => {
       return setStatus('Mật khẩu không khớp.');
     }
     instance.defaults.headers.common['x_authorization'] = localStorage.getItem(storeAccessToken);
-    const response = await instance.post('accounts/change-password', {
-      oldPassword,
-      newPassword
-    });
-    setStatus(response.data.msg);
+    try {
+      const {data} = await instance.post('accounts/change-password', {
+        oldPassword,
+        newPassword
+      });
+      setStatus(data);
+    } catch (error) {
+      setStatus(error.response.data);
+    }
   }
 
   return (
@@ -96,7 +100,7 @@ const Setting = ({ state, dispatch }) => {
                     }}
                     onChange={(event)=>{setConfirmNewPassword(event.target.value)}}
                   />
-                  <h6 style={{color: 'red'}}>{status}</h6>
+                  <h6>{status}</h6>
                 </GridItem>
               </GridContainer>
             </CardBody>

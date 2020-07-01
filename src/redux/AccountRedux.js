@@ -4,12 +4,15 @@ import instance from '../services/AxiosServices';
 // Lấy lại access token sau mỗi 9 phút (vì thời gian tồn tại tối đa của access token la 10 phút)
 const getRefreshToken = async () => {
     instance.defaults.headers.common['x_authorization'] = localStorage.getItem(localStorageVariable.storeAccessToken);
-    const response = await instance.post('auth/refresh', {
-        refreshToken: localStorage.getItem(localStorageVariable.storeRefreshToken) 
-    })
-    console.log(response.data)
-    if (response.data.status === 200) {
-        localStorage.setItem(localStorageVariable.storeAccessToken, response.data.accessToken);
+    try {
+        const {
+            data
+        } = await instance.post('auth/refresh', {
+            refreshToken: localStorage.getItem(localStorageVariable.storeRefreshToken)
+        })
+        localStorage.setItem(localStorageVariable.storeAccessToken, data.accessToken);   
+    } catch (error) {
+        console.log(error.response.data);
     }
 }
 getRefreshToken()
@@ -18,16 +21,30 @@ setInterval(getRefreshToken, 540000);
 export const action = {
     login: (account) => async dispatch => {
         instance.defaults.headers.common['x_authorization'] = localStorage.getItem(localStorageVariable.storeAccessToken);
-        const response = await instance.post('auth/login', account);
 
-        localStorage.setItem(localStorageVariable.storeAccessToken, response.data.accessToken);
-        localStorage.setItem(localStorageVariable.storeRefreshToken, response.data.refreshToken);
-        localStorage.setItem(localStorageVariable.storeAccount, JSON.stringify(response.data.account));
+        try {
+            const {
+                data
+            } = await instance.post('auth/login', account);
 
-        dispatch({
-            type: 'LOGIN',
-            payload: response.data
-        })
+            localStorage.setItem(localStorageVariable.storeAccessToken, data.accessToken);
+            localStorage.setItem(localStorageVariable.storeRefreshToken, data.refreshToken);
+            localStorage.setItem(localStorageVariable.storeAccount, JSON.stringify(data.account));
+
+            dispatch({
+                type: 'LOGIN_SUCCESS',
+                payload: data
+            })
+        } catch (error) {
+            const msg = error.response.data;
+
+            dispatch({
+                type: 'LOGIN_FAILED',
+                payload: {
+                    msg
+                }
+            })
+        }
     },
     logout: () => dispatch => {
         localStorage.clear();
@@ -45,7 +62,7 @@ const initialState = {
 };
 
 export default (state = initialState, action) => {
-    if (action.type === 'LOGIN') {
+    if (action.type === 'LOGIN_SUCCESS') {
         state.accessToken = action.payload.accessToken;
         state.refreshToken = action.payload.refreshToken;
         state.account = action.payload.account;
@@ -53,6 +70,10 @@ export default (state = initialState, action) => {
             accessToken: action.payload.accessToken,
             refreshToken: action.payload.refreshToken,
             account: action.payload.account,
+        }
+    } else if (action.type === 'LOGIN_FAILED') {
+        return {
+            msg: action.payload.msg
         }
     } else if (action.type === 'LOGOUT') {
         return {
