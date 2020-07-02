@@ -24,6 +24,13 @@ import FilterListIcon from '@material-ui/icons/FilterList';
 
 import { action } from '../../redux/AccountRedux';
 
+const headCells = [
+  { id: '_id', numeric: false, disablePadding: true, label: 'ID' },
+  { id: 'accountNumber', numeric: true, disablePadding: false, label: 'Số tài khoản' },
+  { id: 'accountName', numeric: true, disablePadding: false, label: 'Tên tài khoản' },
+  { id: 'accountNameReminiscent', numeric: true, disablePadding: false, label: 'Tên gợi nhớ' },
+];
+
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
     return -1;
@@ -51,7 +58,7 @@ function stableSort(array, comparator) {
 }
 
 function EnhancedTableHead(props) {
-  const { classes, onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort, headCells } = props;
+  const { classes, onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort } = props;
   const createSortHandler = (property) => (event) => {
     onRequestSort(event, property);
   };
@@ -189,7 +196,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const EnhancedTable = (props) => {
-  const { rows, headCells, dispatch } = props;
+  const { rows, dispatch } = props;
   const classes = useStyles();
   const [order, setOrder] = React.useState('asc');
   const [orderBy, setOrderBy] = React.useState();
@@ -262,7 +269,6 @@ const EnhancedTable = (props) => {
             aria-label="enhanced table"
           >
             <EnhancedTableHead
-              headCells={headCells}
               classes={classes}
               numSelected={selected.length}
               order={order}
