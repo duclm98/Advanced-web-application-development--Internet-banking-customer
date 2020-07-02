@@ -61,53 +61,71 @@ const Transaction = ({ dispatch, desAccountNameFromState }) => {
     localStorage.getItem(localStorageVariable.storeAccount)
   );
 
+  // Thông tin chuyển khoản cơ bản
   const srcAccountNumber = account.accountNumber;
   const srcAccountName = account.accountName;
   const [desAccountNumber, setDesAccountNumber] = useState("");
   const [desAccountName, setDesAccountName] = useState("");
   const [money, setMoney] = useState();
   const [content, setContent] = useState();
-
   const [formOfFeePayment, setFormOfFeePayment] = useState(0);
   const [otp, setOtp] = useState();
+
+  // Thông tin thêm danh bạ thụ hưởng
+  const [accountNameReminiscent, setAccountNameReminiscent] = useState("");
+  const [submit, setSubmit] = useState(false);
+
+  // Thông tin giao dịch thành công
+  const [done, setDone] = useState("");
 
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
   const HandleMainButtonClick = async () => {
-    if (progress < 3) {
-      if (
-        progress === 1 &&
-        (desAccountNumber === "" || desAccountName === "")
-      ) {
-        setStatus("Vui lòng nhập số tài khoản cần chuyển đến");
-        return;
-      } else if (progress === 2 && (!money || !content)) {
-        setStatus("Vui lòng nhập đầy đủ thông tin cần thiết");
-        return;
-      }
-      if (progress === 2) {
-        instance.defaults.headers.common[
-          "x_authorization"
-        ] = localStorage.getItem(localStorageVariable.storeAccessToken);
-        try {
-          await instance.post("transactions/send-otp");
-          setStatus("");
-          setProgress(progress + 1);
-        } catch (error) {
-          return setStatus(error.response.data);
-        }
-      } else if (progress === 3) {
-      } else {
+    if (progress === 1 && (desAccountNumber === "" || desAccountName === "")) {
+      return setStatus("Vui lòng nhập số tài khoản cần chuyển đến");
+    } else if (progress === 2 && (!money || !content)) {
+      return setStatus("Vui lòng nhập đầy đủ thông tin cần thiết");
+    } else if (progress === 3 && !otp) {
+      return setStatus("Vui lòng nhập đầy đủ thông tin cần thiết");
+    }
+
+    if (progress === 2) {
+      instance.defaults.headers.common[
+        "x_authorization"
+      ] = localStorage.getItem(localStorageVariable.storeAccessToken);
+      try {
+        await instance.post("transactions/send-otp");
         setStatus("");
         setProgress(progress + 1);
+      } catch (error) {
+        return setStatus(error.response.data);
+      }
+    } else if (progress === 3) {
+      instance.defaults.headers.common[
+        "x_authorization"
+      ] = localStorage.getItem(localStorageVariable.storeAccessToken);
+      try {
+        const { data } = await instance.post("transactions/internal-bank", {
+          formOfFeePayment,
+          otp,
+          desAccountNumber,
+          content,
+          money: +money,
+        });
+
+        const string = `Quý khách đã chuyển thành công ${data.money} VND cho ${data.desAccountName} số tài khoản ${data.desAccountNumber}.
+                        Số dư tài khoản ${data.delta} VND lúc ${data.datetime}. Số dư ${data.accountMoney} VND`;
+        setDone(string);
+
+        setStatus("");
+        setProgress(progress + 1);
+      } catch (error) {
+        return setStatus(error.response.data);
       }
     } else {
-      if (progress === 3 && !otp) {
-        setStatus("Vui lòng nhập đầy đủ thông tin cần thiết");
-        return;
-      }
       setStatus("");
+      setProgress(progress + 1);
     }
   };
 
@@ -139,6 +157,27 @@ const Transaction = ({ dispatch, desAccountNameFromState }) => {
   useEffect(() => {
     setDesAccountName(desAccountNameFromState);
   }, [desAccountNameFromState]);
+
+  // Xử lý thêm danh sách người nhận
+  const handleAddReceiver = () => {
+    setProgress(0);
+    if (accountNameReminiscent === "") {
+      setAccountNameReminiscent(desAccountName);
+    }
+    setSubmit(true);
+  };
+  useEffect(() => {
+    if (submit) {
+      dispatch(
+        accountAction.addReceiver({
+          accountNumber: desAccountNumber,
+          accountName: desAccountName,
+          accountNameReminiscent,
+        })
+      );
+      setSubmit(false);
+    }
+  }, [submit]);
 
   return (
     <div>
@@ -185,7 +224,7 @@ const Transaction = ({ dispatch, desAccountNameFromState }) => {
                     }}
                     variant="static"
                     color="secondary"
-                    value={(progress * 100) / 3}
+                    value={(progress * 100) / 4}
                   />
                 </GridItem>
                 <GridItem xs={12} sm={12} md={9}>
@@ -373,6 +412,41 @@ const Transaction = ({ dispatch, desAccountNameFromState }) => {
                     </GridContainer>
                   ) : null}
 
+                  {progress === 4 ? (
+                    <GridContainer>
+                      <GridItem xs={12} sm={12} md={12}>
+                        <h4 style={{ color: "green" }}>{done}</h4>
+                      </GridItem>
+                      <GridItem xs={12} sm={12} md={4}></GridItem>
+                      <GridItem xs={12} sm={12} md={4}>
+                        <CustomInput
+                          labelText="Tên gợi nhớ"
+                          id="accountNameReminiscent"
+                          formControlProps={{
+                            fullWidth: true,
+                          }}
+                          inputProps={{
+                            disabled: false,
+                          }}
+                          onChange={(event) => {
+                            setAccountNameReminiscent(event.target.value);
+                          }}
+                        />
+                        <Button color="primary" onClick={handleAddReceiver}>
+                          Lưu danh bạ thụ hưởng
+                        </Button>
+                        <Button
+                          color="primary"
+                          onClick={() => {
+                            setProgress(0);
+                          }}
+                        >
+                          Thực hiện giao dịch khác
+                        </Button>
+                      </GridItem>
+                    </GridContainer>
+                  ) : null}
+
                   <GridContainer>
                     <GridItem xs={12} sm={12} md={12}>
                       <h6
@@ -382,22 +456,29 @@ const Transaction = ({ dispatch, desAccountNameFromState }) => {
                       >
                         {status}
                       </h6>
-                      {progress !== 0 ? (
-                        <Button
-                          color="primary"
-                          onClick={() => {
-                            if (progress > 0) {
-                              setProgress(progress - 1);
-                              setStatus("");
-                            }
-                          }}
-                        >
-                          Trở lại
-                        </Button>
+                      {progress !== 4 ? (
+                        <div>
+                          {progress !== 0 ? (
+                            <Button
+                              color="primary"
+                              onClick={() => {
+                                if (progress > 0) {
+                                  setProgress(progress - 1);
+                                  setStatus("");
+                                }
+                              }}
+                            >
+                              Trở lại
+                            </Button>
+                          ) : null}
+                          <Button
+                            color="primary"
+                            onClick={HandleMainButtonClick}
+                          >
+                            {textButton}
+                          </Button>
+                        </div>
                       ) : null}
-                      <Button color="primary" onClick={HandleMainButtonClick}>
-                        {textButton}
-                      </Button>
                     </GridItem>
                   </GridContainer>
                 </GridItem>
