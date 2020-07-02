@@ -13,7 +13,7 @@ import CardHeader from "components/Card/CardHeader.js";
 import CardBody from "components/Card/CardBody.js";
 import CardFooter from "components/Card/CardFooter.js";
 
-import { action } from '../../redux/AccountRedux';
+import { accountAction } from '../../redux';
 import instance from '../../services/AxiosServices';
 
 const styles = {
@@ -64,7 +64,7 @@ const Login = ({msg, dispatch}) => {
 
   const HandleLogin = () => {
     if(reCAPTCHA){
-      dispatch(action.login({username,password}));
+      dispatch(accountAction.login({username,password}));
       document.getElementById('username').value='';
       document.getElementById('password').value='';
       setUsername('');

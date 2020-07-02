@@ -22,7 +22,7 @@ import Switch from '@material-ui/core/Switch';
 import DeleteIcon from '@material-ui/icons/Delete';
 import FilterListIcon from '@material-ui/icons/FilterList';
 
-import { action } from '../../redux/AccountRedux';
+import { accountAction } from '../../redux';
 
 const headCells = [
   { id: '_id', numeric: false, disablePadding: true, label: 'ID' },
@@ -152,7 +152,7 @@ const EnhancedTableToolbar = (props) => {
 
       {numSelected > 0 ? (
         <Tooltip title="Delete">
-          <IconButton aria-label="delete" onClick={()=>{dispatch(action.deleteReceivers(selected))}}>
+          <IconButton aria-label="delete" onClick={()=>{dispatch(accountAction.deleteReceivers(selected))}}>
             <DeleteIcon />
           </IconButton>
         </Tooltip>

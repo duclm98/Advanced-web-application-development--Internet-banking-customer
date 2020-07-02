@@ -1,5 +1,5 @@
-import * as localStorageVariable from '../variables/LocalStorage';
-import instance from '../services/AxiosServices';
+import * as localStorageVariable from './variables/LocalStorage';
+import instance from './services/AxiosServices';
 
 // Lấy lại access token sau mỗi 9 phút (vì thời gian tồn tại tối đa của access token la 10 phút)
 const getRefreshToken = async () => {
@@ -18,7 +18,7 @@ const getRefreshToken = async () => {
 getRefreshToken()
 setInterval(getRefreshToken, 540000);
 
-export const action = {
+export const accountAction = {
     login: (account) => async dispatch => {
         instance.defaults.headers.common['x_authorization'] = localStorage.getItem(localStorageVariable.storeAccessToken);
 
@@ -110,9 +110,15 @@ export const action = {
                 payload: data
             })
         } catch (error) {
-            
+
         }
     },
+}
+
+export const transactionAction = {
+    sendOTP: () => async dispatch => {
+        
+    }
 }
 
 const initialState = {
@@ -120,7 +126,7 @@ const initialState = {
     refreshToken: localStorage.getItem(localStorageVariable.storeRefreshToken),
     account: localStorage.getItem(localStorageVariable.storeAccount),
     receivers: [],
-    changeReceivers: true
+    changeReceivers: true,
 };
 
 export default (state = initialState, action) => {
@@ -146,7 +152,7 @@ export default (state = initialState, action) => {
     } else if (action.type === 'GET_ACCOUNT') {
         return {
             ...state,
-            account: action.payload
+            desAccount: action.payload
         }
     } else if (action.type === 'GET_RECEIVERS') {
         return {
@@ -166,7 +172,7 @@ export default (state = initialState, action) => {
             ...state,
             msg: action.payload.msg
         }
-    } else if (action.type === 'DELETE_RECEIVERS_SUCCESS'){
+    } else if (action.type === 'DELETE_RECEIVERS_SUCCESS') {
         return {
             ...state,
             changeReceivers: true,
