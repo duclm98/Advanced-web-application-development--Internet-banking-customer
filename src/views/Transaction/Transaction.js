@@ -76,6 +76,9 @@ const Transaction = ({
   const [desAccountNumber, setDesAccountNumber] = useState("");
   const [desAccountName, setDesAccountName] = useState("");
 
+  // Thông tin danh bạ thụ hưởng
+  const [receivers, setReceivers] = useState([]);
+
   // Thông tin chọn 1 tài khoản đích từ danh bạ thụ hưởng
   const [select, setSelect] = useState();
 
@@ -137,6 +140,16 @@ const Transaction = ({
   if (changeReceiversFromState === true) {
     dispatch(accountAction.getReceivers());
   }
+
+  useEffect(() => {
+    let arr = [];
+    if (transactionType === 0) {
+      arr = receiversFromState.filter((i) => !i.isAnotherBank);
+    } else if (transactionType === 1) {
+      arr = receiversFromState.filter((i) => i.isAnotherBank === true);
+    }
+    setReceivers(arr);
+  }, [transactionType, receiversFromState]);
 
   // Chọn 1 tài khoản đích trong danh bạ thụ hưởng
   useEffect(() => {
@@ -255,13 +268,15 @@ const Transaction = ({
   };
   useEffect(() => {
     if (submit) {
-      dispatch(
-        accountAction.addReceiver({
-          accountNumber: desAccountNumber,
-          accountName: desAccountName,
-          accountNameReminiscent,
-        })
-      );
+      const receiver = {
+        accountNumber: desAccountNumber,
+        accountName: desAccountName,
+        accountNameReminiscent,
+      };
+      if (transactionType === 1) {
+        receiver.isAnotherBank = true;
+      }
+      dispatch(accountAction.addReceiver(receiver));
       clearState();
     }
   }, [submit]);
@@ -385,7 +400,7 @@ const Transaction = ({
                       <GridContainer>
                         <GridItem xs={12} sm={12} md={12}>
                           <Table
-                            rows={receiversFromState}
+                            rows={receivers}
                             setSelect={setSelect}
                           ></Table>
                         </GridItem>
