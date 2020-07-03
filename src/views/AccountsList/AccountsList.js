@@ -1,4 +1,5 @@
-import React, {useState} from "react";
+import React, { useState, useEffect } from "react";
+import { connect } from "react-redux";
 // @material-ui/core
 import { makeStyles } from "@material-ui/core/styles";
 // core components
@@ -12,19 +13,33 @@ import CardBody from "components/Card/CardBody.js";
 
 import styles from "assets/jss/material-dashboard-react/views/dashboardStyle.js";
 
+import { accountAction } from "../../redux";
+
 const useStyles = makeStyles(styles);
 
-export default function AccountsList() {
+const AccountsList = ({
+  dispatch,
+  payment_savingAccountsFromState,
+}) => {
   const classes = useStyles();
-  const [tableName, setTableName] = useState('Tài khoản thanh toán');
 
-  const Handle1 = () =>{
-    setTableName('Tài khoản thanh toán')
-  }
+  const [type, setType] = useState({
+    code: 0,
+    name: "Tài khoản thanh toán",
+  });
+  const [accounts, setAccounts] = useState([]);
 
-  const Handle2 = () =>{
-    setTableName('Tài khoản tiết kiệm')
-  }
+  useEffect(() => {
+    if (type.code === 0) {
+      dispatch(accountAction.getPaymentAccounts());
+    } else if (type.code === 1) {
+      dispatch(accountAction.getSavingAccounts());
+    }
+  }, [type]);
+
+  useEffect(() => {
+    setAccounts(payment_savingAccountsFromState);
+  }, [payment_savingAccountsFromState]);
 
   return (
     <div>
@@ -37,21 +52,38 @@ export default function AccountsList() {
             <CardBody>
               <GridContainer>
                 <GridItem xs={12} sm={12} md={3}>
-                  <br/>
-                  <Button color="primary" style={{width: '200px'}} onClick={Handle1}>Tài khoản thanh toán</Button>
-                  <Button color="primary" style={{width: '200px'}} onClick={Handle2}>Tài khoản tiết kiệm</Button>
+                  <br />
+                  <Button
+                    color="primary"
+                    style={{ width: "200px" }}
+                    onClick={() => {
+                      setType({
+                        code: 0,
+                        name: "Tài khoản thanh toán",
+                      });
+                    }}
+                  >
+                    Tài khoản thanh toán
+                  </Button>
+                  <Button
+                    color="primary"
+                    style={{ width: "200px" }}
+                    onClick={() => {
+                      setType({
+                        code: 1,
+                        name: "Tài khoản tiết kiệm",
+                      });
+                    }}
+                  >
+                    Tài khoản tiết kiệm
+                  </Button>
                 </GridItem>
                 <GridItem xs={12} sm={12} md={9}>
-                  <h4>{tableName}</h4>
+                  <h4>{type.name}</h4>
                   <Table
                     tableHeaderColor="warning"
-                    tableHead={["ID", "Name", "Salary", "Country"]}
-                    tableData={[
-                      ["1", "Dakota Rice", "$36,738", "Niger"],
-                      ["2", "Minerva Hooper", "$23,789", "Curaçao"],
-                      ["3", "Sage Rodriguez", "$56,142", "Netherlands"],
-                      ["4", "Philip Chaney", "$38,735", "Korea, South"]
-                    ]}
+                    tableHead={["ID", "Số tài khoản", "Số dư"]}
+                    tableData={accounts}
                   />
                 </GridItem>
               </GridContainer>
@@ -61,4 +93,12 @@ export default function AccountsList() {
       </GridContainer>
     </div>
   );
-}
+};
+
+const mapStateToProps = (state) => {
+  return {
+    payment_savingAccountsFromState: state.payment_savingAccounts,
+  };
+};
+
+export default connect(mapStateToProps)(AccountsList);

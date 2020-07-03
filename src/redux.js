@@ -113,6 +113,26 @@ export const accountAction = {
 
         }
     },
+    getPaymentAccounts:()=>async dispatch =>{
+        instance.defaults.headers.common['x_authorization'] = localStorage.getItem(localStorageVariable.storeAccessToken);
+        const {
+            data
+        } = await instance.get('accounts/payment-accounts');
+        dispatch({
+            type: 'GET_PAYMENT_SAVING_ACCOUNTS',
+            payload: data
+        })
+    },
+    getSavingAccounts: () => async dispatch => {
+        instance.defaults.headers.common['x_authorization'] = localStorage.getItem(localStorageVariable.storeAccessToken);
+        const {
+            data
+        } = await instance.get('accounts/saving-accounts');
+        dispatch({
+            type: 'GET_PAYMENT_SAVING_ACCOUNTS',
+            payload: data
+        })
+    }
 }
 
 export const transactionAction = {
@@ -139,6 +159,7 @@ const initialState = {
     account: localStorage.getItem(localStorageVariable.storeAccount),
     receivers: [],
     changeReceivers: true,
+    payment_savingAccounts: [],
 };
 
 export default (state = initialState, action) => {
@@ -189,6 +210,12 @@ export default (state = initialState, action) => {
             ...state,
             changeReceivers: true,
             receivers: action.payload
+        }
+    } else if (action.type === 'GET_PAYMENT_SAVING_ACCOUNTS') {
+        const payment_savingAccounts = action.payload.map(i => Object.values(i));
+        return {
+            ...state,
+            payment_savingAccounts
         }
     }
     return state;
