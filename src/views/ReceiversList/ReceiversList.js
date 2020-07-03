@@ -68,6 +68,7 @@ const ReceiversList = ({
         })
       );
       setSubmit(false);
+      setAccountNameReminiscent("");
     }
   }, [submit]);
 
@@ -82,7 +83,7 @@ const ReceiversList = ({
           <Card>
             <CardHeader color="warning">
               <h4 className={classes.cardTitleWhite}>
-                Danh sách tài khoản người nhận
+                Danh bạ thụ hưởng
               </h4>
             </CardHeader>
             <CardBody>
@@ -128,7 +129,7 @@ const ReceiversList = ({
                   />
                   <h6 style={{ color: "red" }}>{status}</h6>
                   <Button color="primary" onClick={handleAddReceiver}>
-                    Thêm người nhận
+                    Thêm vào danh bạ thụ hưởng
                   </Button>
                 </GridItem>
                 <GridItem xs={12} sm={12} md={9}>

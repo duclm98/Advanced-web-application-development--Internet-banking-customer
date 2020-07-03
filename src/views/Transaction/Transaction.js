@@ -13,10 +13,12 @@ import CardBody from "components/Card/CardBody.js";
 
 import { CircularProgress, Menu, MenuItem, Fade } from "@material-ui/core";
 
+import Table from "./Table";
+
 import * as localStorageVariable from "../../variables/LocalStorage";
 import instance from "../../services/AxiosServices";
 
-import { accountAction, transactionAction } from "../../redux";
+import { accountAction } from "../../redux";
 
 const styles = {
   cardCategoryWhite: {
@@ -39,9 +41,15 @@ const styles = {
 
 const useStyles = makeStyles(styles);
 
-const Transaction = ({ dispatch, desAccountNameFromState }) => {
+const Transaction = ({
+  dispatch,
+  desAccountNameFromState,
+  receiversFromState,
+  changeReceiversFromState,
+}) => {
   const classes = useStyles();
 
+  // Thông tin loại giao dịch (cùng hoặc khác ngân hàng)
   const [textTransactionType, setTextTransactionType] = useState(
     "Chuyển khoản cùng ngân hàng"
   );
@@ -50,26 +58,36 @@ const Transaction = ({ dispatch, desAccountNameFromState }) => {
     disableButtonTransactionType,
     setDisableButtonTransactionType,
   ] = useState(false);
+
+  // Thông tin ai là người trả phí giao dịch
   const [textFormOfFeePayment, setTextFormOfFeePayment] = useState(
     "Người chuyển trả phí chuyển khoản"
   );
-  const [textButton, setTextButton] = useState("Tiếp tục");
-  const [progress, setProgress] = useState(0);
-  const [status, setStatus] = useState("");
+  const [formOfFeePayment, setFormOfFeePayment] = useState(0);
 
+  // Thông tin tài khoản nguồn
   const account = JSON.parse(
     localStorage.getItem(localStorageVariable.storeAccount)
   );
-
-  // Thông tin chuyển khoản cơ bản
   const srcAccountNumber = account.accountNumber;
   const srcAccountName = account.accountName;
+
+  // Thông tin tài khoản đích
   const [desAccountNumber, setDesAccountNumber] = useState("");
   const [desAccountName, setDesAccountName] = useState("");
+
+  // Thông tin chọn 1 tài khoản đích từ danh bạ thụ hưởng
+  const [select, setSelect] = useState();
+
+  // Thông tin chuyển khoản (số tiền, nội dung)
   const [money, setMoney] = useState();
-  const [content, setContent] = useState();
-  const [formOfFeePayment, setFormOfFeePayment] = useState(0);
-  const [otp, setOtp] = useState();
+  const [content, setContent] = useState("");
+  const [otp, setOtp] = useState("");
+
+  // Thông tin progress hiện tại, loại button hiện tại
+  const [progress, setProgress] = useState(0);
+  const [textButton, setTextButton] = useState("Tiếp tục");
+  const [status, setStatus] = useState("");
 
   // Thông tin thêm danh bạ thụ hưởng
   const [accountNameReminiscent, setAccountNameReminiscent] = useState("");
@@ -81,16 +99,61 @@ const Transaction = ({ dispatch, desAccountNameFromState }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
+  const clearState = () => {
+    setProgress(0);
+    setTextButton("Tiếp tục");
+    setStatus("");
+    
+    setTextTransactionType("Chuyển khoản cùng ngân hàng");
+    setTransactionType(0);
+    setDisableButtonTransactionType(false);
+
+    setTextFormOfFeePayment("Người chuyển trả phí chuyển khoản");
+    setFormOfFeePayment(0);
+
+    setDesAccountNumber("");
+    setDesAccountName("");
+    setSelect(null);
+
+    setMoney();
+    setContent("");
+    setOtp("");
+
+    setAccountNameReminiscent("");
+    setSubmit(false);
+    setDone("");
+  };
+
+  // Lấy danh bạ thụ hưởng từ state
+  if (changeReceiversFromState === true) {
+    dispatch(accountAction.getReceivers());
+  }
+
+  // Chọn 1 tài khoản đích trong danh bạ thụ hưởng
+  useEffect(() => {
+    if (select) {
+      const selected = select[0];
+      for (let i = 0; i < receiversFromState.length; i++) {
+        if (receiversFromState[i]._id === selected) {
+          setDesAccountNumber(receiversFromState[i].accountNumber);
+          setDesAccountName(receiversFromState[i].accountName);
+          break;
+        }
+      }
+    }
+  }, [select]);
+
   const HandleMainButtonClick = async () => {
     if (progress === 1 && (desAccountNumber === "" || desAccountName === "")) {
       return setStatus("Vui lòng nhập số tài khoản cần chuyển đến");
-    } else if (progress === 2 && (!money || !content)) {
+    } else if (progress === 2 && (!money || content === "")) {
       return setStatus("Vui lòng nhập đầy đủ thông tin cần thiết");
-    } else if (progress === 3 && !otp) {
+    } else if (progress === 3 && otp === "") {
       return setStatus("Vui lòng nhập đầy đủ thông tin cần thiết");
     }
 
     if (progress === 2) {
+      // Xử lý gửi otp
       instance.defaults.headers.common[
         "x_authorization"
       ] = localStorage.getItem(localStorageVariable.storeAccessToken);
@@ -102,6 +165,7 @@ const Transaction = ({ dispatch, desAccountNameFromState }) => {
         return setStatus(error.response.data);
       }
     } else if (progress === 3) {
+      // Xử lý xác nhận giao dịch
       instance.defaults.headers.common[
         "x_authorization"
       ] = localStorage.getItem(localStorageVariable.storeAccessToken);
@@ -118,8 +182,8 @@ const Transaction = ({ dispatch, desAccountNameFromState }) => {
                         Số dư tài khoản ${data.delta} VND lúc ${data.datetime}. Số dư ${data.accountMoney} VND`;
         setDone(string);
 
-        setStatus("");
         setProgress(progress + 1);
+        setStatus("");
       } catch (error) {
         return setStatus(error.response.data);
       }
@@ -158,9 +222,8 @@ const Transaction = ({ dispatch, desAccountNameFromState }) => {
     setDesAccountName(desAccountNameFromState);
   }, [desAccountNameFromState]);
 
-  // Xử lý thêm danh sách người nhận
+  // Xử lý thêm danh bạ thụ hưởng
   const handleAddReceiver = () => {
-    setProgress(0);
     if (accountNameReminiscent === "") {
       setAccountNameReminiscent(desAccountName);
     }
@@ -175,7 +238,7 @@ const Transaction = ({ dispatch, desAccountNameFromState }) => {
           accountNameReminiscent,
         })
       );
-      setSubmit(false);
+      clearState();
     }
   }, [submit]);
 
@@ -262,37 +325,48 @@ const Transaction = ({ dispatch, desAccountNameFromState }) => {
                   ) : null}
 
                   {progress === 1 ? (
-                    <GridContainer>
-                      <GridItem xs={12} sm={12} md={4}>
-                        <CustomInput
-                          labelText="Số tài khoản đích"
-                          id="desAccountNumber"
-                          formControlProps={{
-                            fullWidth: true,
-                          }}
-                          onChange={(event) => {
-                            setDesAccountNumber(event.target.value);
-                          }}
-                          inputProps={{
-                            disabled: false,
-                          }}
-                        />
-                      </GridItem>
-                      <GridItem xs={12} sm={12} md={8}>
-                        <CustomInput
-                          labelText="Tên tài khoản đích"
-                          id="desAccountName"
-                          formControlProps={{
-                            fullWidth: true,
-                          }}
-                          value={desAccountName}
-                          inputProps={{
-                            disabled: true,
-                          }}
-                          value={desAccountName}
-                        />
-                      </GridItem>
-                    </GridContainer>
+                    <div>
+                      <GridContainer>
+                        <GridItem xs={12} sm={12} md={4}>
+                          <CustomInput
+                            labelText="Số tài khoản đích"
+                            id="desAccountNumber"
+                            formControlProps={{
+                              fullWidth: true,
+                            }}
+                            onChange={(event) => {
+                              setDesAccountNumber(event.target.value);
+                            }}
+                            inputProps={{
+                              disabled: false,
+                            }}
+                            value={desAccountNumber}
+                          />
+                        </GridItem>
+                        <GridItem xs={12} sm={12} md={8}>
+                          <CustomInput
+                            labelText="Tên tài khoản đích"
+                            id="desAccountName"
+                            formControlProps={{
+                              fullWidth: true,
+                            }}
+                            value={desAccountName}
+                            inputProps={{
+                              disabled: true,
+                            }}
+                            value={desAccountName}
+                          />
+                        </GridItem>
+                      </GridContainer>
+                      <GridContainer>
+                        <GridItem xs={12} sm={12} md={12}>
+                          <Table
+                            rows={receiversFromState}
+                            setSelect={setSelect}
+                          ></Table>
+                        </GridItem>
+                      </GridContainer>
+                    </div>
                   ) : null}
 
                   {progress === 2 ? (
@@ -389,7 +463,6 @@ const Transaction = ({ dispatch, desAccountNameFromState }) => {
                           formControlProps={{
                             fullWidth: true,
                           }}
-                          value={otp}
                           onChange={(event) => {
                             setOtp(event.target.value);
                           }}
@@ -437,9 +510,7 @@ const Transaction = ({ dispatch, desAccountNameFromState }) => {
                         </Button>
                         <Button
                           color="primary"
-                          onClick={() => {
-                            setProgress(0);
-                          }}
+                          onClick={clearState}
                         >
                           Thực hiện giao dịch khác
                         </Button>
@@ -497,6 +568,8 @@ const mapStateToProps = (state) => {
     : "";
   return {
     desAccountNameFromState,
+    receiversFromState: state.receivers,
+    changeReceiversFromState: state.changeReceivers,
   };
 };
 
