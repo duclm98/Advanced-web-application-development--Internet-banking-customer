@@ -116,8 +116,20 @@ export const accountAction = {
 }
 
 export const transactionAction = {
-    sendOTP: () => async dispatch => {
-        
+    getInterbankAccount: (accountNumberFromBody) => async dispatch => {
+        const accountNumber = accountNumberFromBody ? accountNumberFromBody : '0000000000000';
+        instance.defaults.headers.common['x_authorization'] = localStorage.getItem(localStorageVariable.storeAccessToken);
+        try {
+            const {
+                data
+            } = await instance.get(`transactions/interbank/accountNumber/${accountNumber}`);
+            dispatch({
+                type: 'GET_ACCOUNT',
+                payload: data
+            })
+        } catch (error) {
+
+        }
     }
 }
 

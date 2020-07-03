@@ -18,7 +18,7 @@ import Table from "./Table";
 import * as localStorageVariable from "../../variables/LocalStorage";
 import instance from "../../services/AxiosServices";
 
-import { accountAction } from "../../redux";
+import { accountAction, transactionAction } from "../../redux";
 
 const styles = {
   cardCategoryWhite: {
@@ -103,7 +103,7 @@ const Transaction = ({
     setProgress(0);
     setTextButton("Tiếp tục");
     setStatus("");
-    
+
     setTextTransactionType("Chuyển khoản cùng ngân hàng");
     setTransactionType(0);
     setDisableButtonTransactionType(false);
@@ -123,6 +123,15 @@ const Transaction = ({
     setSubmit(false);
     setDone("");
   };
+
+  // Gọi action lấy account khi account number thay đổi
+  useEffect(() => {
+    if (transactionType === 0) {
+      dispatch(accountAction.getAccount(desAccountNumber));
+    } else if (transactionType === 1) {
+      dispatch(transactionAction.getInterbankAccount(desAccountNumber));
+    }
+  }, [desAccountNumber]);
 
   // Lấy danh bạ thụ hưởng từ state
   if (changeReceiversFromState === true) {
@@ -165,41 +174,56 @@ const Transaction = ({
         return setStatus(error.response.data);
       }
     } else if (progress === 3) {
-      // Xử lý xác nhận giao dịch
       instance.defaults.headers.common[
         "x_authorization"
       ] = localStorage.getItem(localStorageVariable.storeAccessToken);
-      try {
-        const { data } = await instance.post("transactions/internal-bank", {
-          formOfFeePayment,
-          otp,
-          desAccountNumber,
-          content,
-          money: +money,
-        });
 
-        const string = `Quý khách đã chuyển thành công ${data.money} VND cho ${data.desAccountName} số tài khoản ${data.desAccountNumber}.
-                        Số dư tài khoản ${data.delta} VND lúc ${data.datetime}. Số dư ${data.accountMoney} VND`;
-        setDone(string);
+      // Xử lý xác nhận giao dịch
+      if (transactionType === 0) {
+        try {
+          const { data } = await instance.post("transactions/internal-bank", {
+            formOfFeePayment,
+            otp,
+            desAccountNumber,
+            content,
+            money: +money,
+          });
 
-        setProgress(progress + 1);
-        setStatus("");
-      } catch (error) {
-        return setStatus(error.response.data);
+          const string = `Quý khách đã chuyển thành công ${data.money} VND cho ${data.desAccountName} số tài khoản ${data.desAccountNumber}.
+                          Số dư tài khoản ${data.delta} VND lúc ${data.datetime}. Số dư ${data.accountMoney} VND`;
+          setDone(string);
+
+          setProgress(progress + 1);
+          setStatus("");
+        } catch (error) {
+          return setStatus(error.response.data);
+        }
+      } else if (transactionType === 1) {
+        try {
+          const { data } = await instance.post("transactions/interbank", {
+            formOfFeePayment,
+            otp,
+            desAccountNumber,
+            desAccountName,
+            content,
+            money: +money,
+          });
+
+          const string = `Quý khách đã chuyển thành công ${data.money} VND cho ${data.desAccountName} số tài khoản ${data.desAccountNumber}.
+                          Số dư tài khoản ${data.delta} VND lúc ${data.datetime}. Số dư ${data.accountMoney} VND`;
+          setDone(string);
+
+          setProgress(progress + 1);
+          setStatus("");
+        } catch (error) {
+          return setStatus(error.response.data);
+        }
       }
     } else {
       setStatus("");
       setProgress(progress + 1);
     }
   };
-
-  // Gọi action lấy account khi account number thay đổi
-  useEffect(() => {
-    if (transactionType === 0) {
-      dispatch(accountAction.getAccount(desAccountNumber));
-    } else if (transactionType === 1) {
-    }
-  }, [desAccountNumber]);
 
   useEffect(() => {
     if (progress === 0) {
@@ -508,10 +532,7 @@ const Transaction = ({
                         <Button color="primary" onClick={handleAddReceiver}>
                           Lưu danh bạ thụ hưởng
                         </Button>
-                        <Button
-                          color="primary"
-                          onClick={clearState}
-                        >
+                        <Button color="primary" onClick={clearState}>
                           Thực hiện giao dịch khác
                         </Button>
                       </GridItem>
