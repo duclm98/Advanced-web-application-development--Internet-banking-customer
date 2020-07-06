@@ -21,7 +21,7 @@ import Button from "components/CustomButtons/Button.js";
 
 import styles from "assets/jss/material-dashboard-react/components/headerLinksStyle.js";
 
-import { action } from '../../redux/AccountRedux';
+import { accountAction } from '../../redux';
 
 const useStyles = makeStyles(styles);
 
@@ -41,7 +41,7 @@ const AdminNavbarLinks = ({dispatch}) => {
   };
   const handleLogout = () => {
     setOpenProfile(null);
-    dispatch(action.logout());
+    dispatch(accountAction.logout());
   }
 
   return (

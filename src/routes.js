@@ -36,7 +36,7 @@ const dashboardRoutes = [
   },
   {
     path: "/receivers-list",
-    name: "Danh sách người nhận",
+    name: "Danh bạ thụ hưởng",
     icon: ListAltOutlined,
     component: ReceiversListPage,
   },
