@@ -36,7 +36,10 @@ export const accountAction = {
                 payload: data
             })
         } catch (error) {
-            const msg = error.response.data;
+            let msg = 'Có lỗi xảy ra, vui lòng thử lại.';
+            if(error.response){
+                msg = error.response.data;
+            }
 
             dispatch({
                 type: 'LOGIN_FAILED',
