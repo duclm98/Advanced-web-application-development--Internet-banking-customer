@@ -12,7 +12,7 @@ const getRefreshToken = async () => {
         })
         localStorage.setItem(localStorageVariable.storeAccessToken, data.accessToken);
     } catch (error) {
-        console.log(error.response.data);
+        console.log('Không tìm thấy access token mới.');
     }
 }
 getRefreshToken()
