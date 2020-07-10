@@ -32,8 +32,8 @@
     "redux-thunk": "^2.3.0"
   },
   "scripts": {
-    "start": "PORT=3001 REACT_APP_BASE_BACKEND_URL=http://localhost:3000/ react-scripts start",
-    "prod": "PORT=3001 REACT_APP_BASE_BACKEND_URL=http://34.92.149.125:3000/ react-scripts start",
+    "dev": "PORT=3001 REACT_APP_BASE_BACKEND_URL=http://localhost:3000/ react-scripts start",
+    "start": "PORT=3001 REACT_APP_BASE_BACKEND_URL=http://34.92.149.125:3000/ react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
