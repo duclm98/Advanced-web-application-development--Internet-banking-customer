@@ -19,12 +19,14 @@
 import SendOutlined from '@material-ui/icons/SendOutlined';
 import LibraryBooks from "@material-ui/icons/LibraryBooks";
 import ListAltOutlined from '@material-ui/icons/ListAltOutlined';
+import NotificationImportantOutlined from '@material-ui/icons/NotificationImportantOutlined';
 import SettingsApplicationsOutlined from '@material-ui/icons/SettingsApplicationsOutlined';
 
 // core components/views for Admin layout
 import AccountsListPage from 'views/AccountsList/AccountsList.js';
 import ReceiversListPage from 'views/ReceiversList/ReceiversList.js';
 import TransactionPage from 'views/Transaction/Transaction.js';
+import DebtRemindersPage from 'views/DebtReminders/DebtReminders.js';
 import SettingPage from 'views/Setting/Setting.js';
 
 const dashboardRoutes = [
@@ -45,6 +47,12 @@ const dashboardRoutes = [
     name: "Chuyển khoản",
     icon: SendOutlined,
     component: TransactionPage,
+  },
+  {
+    path: "/debt-reminders",
+    name: "Quản lý nhắc nợ",
+    icon: NotificationImportantOutlined,
+    component: DebtRemindersPage,
   },
   {
     path: "/setting",
