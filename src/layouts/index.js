@@ -2,7 +2,8 @@ import React from "react";
 import { Switch, Route, Redirect } from "react-router-dom";
 import { connect } from 'react-redux';
 // creates a beautiful scrollbar
-import PerfectScrollbar from "perfect-scrollbar";
+// import PerfectScrollbar from "perfect-scrollbar";
+import PerfectScrollbar from 'react-perfect-scrollbar'
 import "perfect-scrollbar/css/perfect-scrollbar.css";
 // @material-ui/core components
 import { makeStyles } from "@material-ui/core/styles";
@@ -88,7 +89,7 @@ const Layouts = ({ rest, accessToken }) => {
     // Specify how to clean up after this effect:
     return function cleanup() {
       if (navigator.platform.indexOf("Win") > -1) {
-        ps.destroy();
+        // ps.destroy();
       }
       window.removeEventListener("resize", resizeFunction);
     };
