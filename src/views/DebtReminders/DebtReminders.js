@@ -18,63 +18,37 @@ import styles from "assets/jss/material-dashboard-react/views/dashboardStyle.js"
 
 const useStyles = makeStyles(styles);
 
-const DebtReminders = ({
-  desAccountNameFromState,
-  msgFromState,
-  receiversFromState,
-  changeReceiversFromState,
-  dispatch,
-}) => {
+const DebtReminders = ({ dispatch, desAccountNameFromState }) => {
   const classes = useStyles();
 
-  const [accountNumber, setAccountNumber] = useState("");
-  const [accountName, setAccountName] = useState("");
-  const [accountNameReminiscent, setAccountNameReminiscent] = useState("");
-  const [status, setStatus] = useState("");
-  const [submit, setSubmit] = useState(false);
-
-  if (changeReceiversFromState === true) {
-    dispatch(accountAction.getReceivers());
-  }
+  const [input, setInput] = useState({
+    accountNumber: "",
+    accountName: "",
+    debtMoney: 0,
+    debtContent: "",
+    status:""
+  });
 
   useEffect(() => {
-    dispatch(accountAction.getAccount(accountNumber));
-  }, [accountNumber]);
+    dispatch(accountAction.getAccount(input.accountNumber));
+  }, [input.accountNumber]);
 
   useEffect(() => {
-    if (desAccountNameFromState) {
-      setAccountName(desAccountNameFromState);
-    } else {
-      setAccountName("");
-    }
+    setInput((prev) => ({
+      ...prev,
+      accountName: desAccountNameFromState,
+    }));
   }, [desAccountNameFromState]);
 
-  const handleAddReceiver = () => {
-    if (accountNumber === "" || accountName === "") {
-      return setStatus("Vui lòng điền đầy đủ thông tin");
+  const HandleCreatDebtReminders = () => {
+    if(input.accountNumber===""||input.accountName===""||input.debtMoney===0||input.debtContent===""){
+      return setInput((prev) => ({
+        ...prev,
+        status: "Vui lòng nhập đầy đủ thông tin cần thiết!",
+      }));
     }
-    if (accountNameReminiscent === "") {
-      setAccountNameReminiscent(accountName);
-    }
-    setSubmit(true);
+    
   };
-  useEffect(() => {
-    if (submit) {
-      dispatch(
-        accountAction.addReceiver({
-          accountNumber,
-          accountName,
-          accountNameReminiscent,
-        })
-      );
-      setSubmit(false);
-      setAccountNameReminiscent("");
-    }
-  }, [submit]);
-
-  useEffect(() => {
-    setStatus(msgFromState);
-  }, [msgFromState]);
 
   return (
     <div>
@@ -82,9 +56,7 @@ const DebtReminders = ({
         <GridItem xs={12} sm={12} md={12}>
           <Card>
             <CardHeader color="warning">
-              <h4 className={classes.cardTitleWhite}>
-                Danh bạ thụ hưởng
-              </h4>
+              <h4 className={classes.cardTitleWhite}>Quản lý nhắc nợ</h4>
             </CardHeader>
             <CardBody>
               <GridContainer>
@@ -92,7 +64,6 @@ const DebtReminders = ({
                   <br />
                   <CustomInput
                     labelText="Số tài khoản"
-                    id="accountNumber"
                     formControlProps={{
                       fullWidth: true,
                     }}
@@ -100,40 +71,51 @@ const DebtReminders = ({
                       disabled: false,
                     }}
                     onChange={(event) => {
-                      setAccountNumber(event.target.value);
+                      const accountNumber = event.target.value;
+                      setInput((prev) => ({
+                        ...prev,
+                        accountNumber,
+                      }));
                     }}
                   />
                   <CustomInput
                     labelText="Tên tài khoản"
-                    id="accountName"
                     formControlProps={{
                       fullWidth: true,
                     }}
                     inputProps={{
                       disabled: true,
                     }}
-                    value={accountName}
+                    value={input.accountName}
                   />
                   <CustomInput
-                    labelText="Tên gợi nhớ"
-                    id="accountNameReminiscent"
+                    labelText="Số tiền nợ"
                     formControlProps={{
                       fullWidth: true,
                     }}
                     inputProps={{
                       disabled: false,
                     }}
-                    onChange={(event) => {
-                      setAccountNameReminiscent(event.target.value);
-                    }}
+                    type="number"
+                    onChange={(event) => {}}
                   />
-                  <h6 style={{ color: "red" }}>{status}</h6>
-                  <Button color="primary" onClick={handleAddReceiver}>
-                    Thêm vào danh bạ thụ hưởng
+                  <CustomInput
+                    labelText="Nội dung nhắc nợ"
+                    formControlProps={{
+                      fullWidth: true,
+                    }}
+                    inputProps={{
+                      disabled: false,
+                    }}
+                    onChange={(event) => {}}
+                  />
+                  <h6 style={{ color: "red" }}>{input.status}</h6>
+                  <Button color="primary" onClick={HandleCreatDebtReminders}>
+                    Tạo nhắc nợ
                   </Button>
                 </GridItem>
                 <GridItem xs={12} sm={12} md={9}>
-                  <Table rows={receiversFromState}></Table>
+                  {/* <Table rows={receiversFromState}></Table> */}
                 </GridItem>
               </GridContainer>
             </CardBody>
@@ -150,9 +132,6 @@ const mapStateToProps = (state) => {
     : "";
   return {
     desAccountNameFromState,
-    msgFromState: state.msg,
-    receiversFromState: state.receivers,
-    changeReceiversFromState: state.changeReceivers,
   };
 };
 

@@ -67,7 +67,7 @@ const Setting = ({ state, dispatch }) => {
       <GridContainer>
         <GridItem xs={12} sm={12} md={4}>
           <Card>
-            <CardHeader color="primary">
+            <CardHeader color="warning">
               <h4 className={classes.cardTitleWhite}>Thay đổi mật khẩu</h4>
             </CardHeader>
             <CardBody>

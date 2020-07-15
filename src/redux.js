@@ -1,160 +1,222 @@
-import * as localStorageVariable from './variables/LocalStorage';
-import instance from './services/AxiosServices';
+import * as localStorageVariable from "./variables/LocalStorage";
+import instance from "./services/AxiosServices";
 
 // Lấy lại access token sau mỗi 9 phút (vì thời gian tồn tại tối đa của access token la 10 phút)
 const getRefreshToken = async () => {
-    instance.defaults.headers.common['x_authorization'] = localStorage.getItem(localStorageVariable.storeAccessToken);
+    instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
+        localStorageVariable.storeAccessToken
+    );
     try {
         const {
             data
-        } = await instance.post('auth/refresh', {
-            refreshToken: localStorage.getItem(localStorageVariable.storeRefreshToken)
-        })
-        localStorage.setItem(localStorageVariable.storeAccessToken, data.accessToken);
+        } = await instance.post("auth/refresh", {
+            refreshToken: localStorage.getItem(
+                localStorageVariable.storeRefreshToken
+            ),
+        });
+        localStorage.setItem(
+            localStorageVariable.storeAccessToken,
+            data.accessToken
+        );
     } catch (error) {
-        console.log('Không tìm thấy access token mới.');
+        console.log("Không tìm thấy access token mới.");
     }
-}
-getRefreshToken()
+};
+getRefreshToken();
 setInterval(getRefreshToken, 540000);
 
 export const accountAction = {
-    login: (account) => async dispatch => {
-        instance.defaults.headers.common['x_authorization'] = localStorage.getItem(localStorageVariable.storeAccessToken);
+    login: (account) => async (dispatch) => {
+        instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
+            localStorageVariable.storeAccessToken
+        );
 
         try {
             const {
                 data
-            } = await instance.post('auth/login', account);
+            } = await instance.post("auth/login", account);
 
-            localStorage.setItem(localStorageVariable.storeAccessToken, data.accessToken);
-            localStorage.setItem(localStorageVariable.storeRefreshToken, data.refreshToken);
-            localStorage.setItem(localStorageVariable.storeAccount, JSON.stringify(data.account));
+            localStorage.setItem(
+                localStorageVariable.storeAccessToken,
+                data.accessToken
+            );
+            localStorage.setItem(
+                localStorageVariable.storeRefreshToken,
+                data.refreshToken
+            );
+            localStorage.setItem(
+                localStorageVariable.storeAccount,
+                JSON.stringify(data.account)
+            );
 
             dispatch({
-                type: 'LOGIN_SUCCESS',
-                payload: data
-            })
+                type: "LOGIN_SUCCESS",
+                payload: data,
+            });
         } catch (error) {
-            let msg = 'Có lỗi xảy ra, vui lòng thử lại.';
-            if(error.response){
+            let msg = "Có lỗi xảy ra, vui lòng thử lại.";
+            if (error.response) {
                 msg = error.response.data;
             }
 
             dispatch({
-                type: 'LOGIN_FAILED',
+                type: "LOGIN_FAILED",
                 payload: {
-                    msg
-                }
-            })
+                    msg,
+                },
+            });
         }
     },
-    logout: () => dispatch => {
+    logout: () => (dispatch) => {
         localStorage.clear();
 
         dispatch({
-            type: 'LOGOUT',
-        })
+            type: "LOGOUT",
+        });
     },
-    getAccount: (accountNumberFromBody) => async dispatch => {
-        const accountNumber = accountNumberFromBody ? accountNumberFromBody : '0000000000000';
-        instance.defaults.headers.common['x_authorization'] = localStorage.getItem(localStorageVariable.storeAccessToken);
+    getAccount: (accountNumberFromBody) => async (dispatch) => {
+        const accountNumber = accountNumberFromBody ?
+            accountNumberFromBody :
+            "0000000000000";
+        instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
+            localStorageVariable.storeAccessToken
+        );
         try {
             const {
                 data
-            } = await instance.get(`accounts/accountNumber/${accountNumber}`);
+            } = await instance.get(
+                `accounts/accountNumber/${accountNumber}`
+            );
             dispatch({
-                type: 'GET_ACCOUNT',
-                payload: data
-            })
-        } catch (error) {
-
-        }
+                type: "GET_ACCOUNT",
+                payload: data,
+            });
+        } catch (error) {}
     },
-    getReceivers: () => async dispatch => {
-        instance.defaults.headers.common['x_authorization'] = localStorage.getItem(localStorageVariable.storeAccessToken);
+    getReceivers: () => async (dispatch) => {
+        instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
+            localStorageVariable.storeAccessToken
+        );
         const {
             data
-        } = await instance.get('accounts/receivers');
+        } = await instance.get("accounts/receivers");
         dispatch({
-            type: 'GET_RECEIVERS',
-            payload: data
-        })
+            type: "GET_RECEIVERS",
+            payload: data,
+        });
     },
-    addReceiver: (receiver) => async dispatch => {
-        instance.defaults.headers.common['x_authorization'] = localStorage.getItem(localStorageVariable.storeAccessToken);
+    addReceiver: (receiver) => async (dispatch) => {
+        instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
+            localStorageVariable.storeAccessToken
+        );
         try {
             const {
                 data
             } = await instance.post(`accounts/receivers`, receiver);
             dispatch({
-                type: 'ADD_RECEIVER_SUCCESS',
-                payload: data
-            })
+                type: "ADD_RECEIVER_SUCCESS",
+                payload: data,
+            });
         } catch (error) {
             dispatch({
-                type: 'ADD_RECEIVER_FAILED',
+                type: "ADD_RECEIVER_FAILED",
                 payload: {
-                    msg: error.response.data
-                }
-            })
+                    msg: error.response.data,
+                },
+            });
         }
     },
-    deleteReceivers: (receiverIDs) => async dispatch => {
-        instance.defaults.headers.common['x_authorization'] = localStorage.getItem(localStorageVariable.storeAccessToken);
+    deleteReceivers: (receiverIDs) => async (dispatch) => {
+        instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
+            localStorageVariable.storeAccessToken
+        );
         try {
             const {
                 data
             } = await instance.post(`accounts/receivers-delete`, {
-                receiverIDs
+                receiverIDs,
             });
             dispatch({
-                type: 'DELETE_RECEIVERS_SUCCESS',
-                payload: data
-            })
-        } catch (error) {
-
-        }
+                type: "DELETE_RECEIVERS_SUCCESS",
+                payload: data,
+            });
+        } catch (error) {}
     },
-    getPaymentAccounts:()=>async dispatch =>{
-        instance.defaults.headers.common['x_authorization'] = localStorage.getItem(localStorageVariable.storeAccessToken);
+    getPaymentAccounts: () => async (dispatch) => {
+        instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
+            localStorageVariable.storeAccessToken
+        );
         const {
             data
-        } = await instance.get('accounts/payment-accounts');
+        } = await instance.get("accounts/payment-accounts");
         dispatch({
-            type: 'GET_PAYMENT_SAVING_ACCOUNTS',
-            payload: data
-        })
+            type: "GET_PAYMENT_SAVING_ACCOUNTS",
+            payload: data,
+        });
     },
-    getSavingAccounts: () => async dispatch => {
-        instance.defaults.headers.common['x_authorization'] = localStorage.getItem(localStorageVariable.storeAccessToken);
+    getSavingAccounts: () => async (dispatch) => {
+        instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
+            localStorageVariable.storeAccessToken
+        );
         const {
             data
-        } = await instance.get('accounts/saving-accounts');
+        } = await instance.get("accounts/saving-accounts");
         dispatch({
-            type: 'GET_PAYMENT_SAVING_ACCOUNTS',
-            payload: data
-        })
-    }
-}
+            type: "GET_PAYMENT_SAVING_ACCOUNTS",
+            payload: data,
+        });
+    },
+};
 
 export const transactionAction = {
-    getInterbankAccount: (accountNumberFromBody) => async dispatch => {
-        const accountNumber = accountNumberFromBody ? accountNumberFromBody : '0000000000000';
-        instance.defaults.headers.common['x_authorization'] = localStorage.getItem(localStorageVariable.storeAccessToken);
+    getInterbankAccount: (accountNumberFromBody) => async (dispatch) => {
+        const accountNumber = accountNumberFromBody ?
+            accountNumberFromBody :
+            "0000000000000";
+        instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
+            localStorageVariable.storeAccessToken
+        );
         try {
             const {
                 data
-            } = await instance.get(`transactions/interbank/accountNumber/${accountNumber}`);
+            } = await instance.get(
+                `transactions/interbank/accountNumber/${accountNumber}`
+            );
             dispatch({
-                type: 'GET_ACCOUNT',
-                payload: data
-            })
-        } catch (error) {
+                type: "GET_ACCOUNT",
+                payload: data,
+            });
+        } catch (error) {}
+    },
+};
 
-        }
+function setupSSE() {
+    if (typeof EventSource === "undefined") {
+        console.log("not support");
+        return;
     }
+
+    var src = new EventSource(
+        `${process.env.REACT_APP_BASE_BACKEND_URL}debt-reminders/debt-reminders-add-event`
+    );
+
+    src.onerror = function (e) {
+        console.log("error: " + e);
+    };
+
+    src.addEventListener(
+        "DEBT_REMINDERS_ADDED",
+        function (e) {
+            const data = JSON.parse(e.data);
+        },
+        false
+    );
 }
+setupSSE();
+
+export const debtRemindersAction = {
+    createDebtReminders: (debtReminders) => async (dispatch) => {},
+};
 
 const initialState = {
     accessToken: localStorage.getItem(localStorageVariable.storeAccessToken),
@@ -166,7 +228,7 @@ const initialState = {
 };
 
 export default (state = initialState, action) => {
-    if (action.type === 'LOGIN_SUCCESS') {
+    if (action.type === "LOGIN_SUCCESS") {
         state.accessToken = action.payload.accessToken;
         state.refreshToken = action.payload.refreshToken;
         state.account = action.payload.account;
@@ -174,52 +236,52 @@ export default (state = initialState, action) => {
             accessToken: action.payload.accessToken,
             refreshToken: action.payload.refreshToken,
             account: action.payload.account,
-        }
-    } else if (action.type === 'LOGIN_FAILED') {
+        };
+    } else if (action.type === "LOGIN_FAILED") {
         return {
-            msg: action.payload.msg
-        }
-    } else if (action.type === 'LOGOUT') {
+            msg: action.payload.msg,
+        };
+    } else if (action.type === "LOGOUT") {
         return {
             accessToken: null,
             refreshToken: null,
-            account: null
-        }
-    } else if (action.type === 'GET_ACCOUNT') {
+            account: null,
+        };
+    } else if (action.type === "GET_ACCOUNT") {
         return {
             ...state,
-            desAccount: action.payload
-        }
-    } else if (action.type === 'GET_RECEIVERS') {
+            desAccount: action.payload,
+        };
+    } else if (action.type === "GET_RECEIVERS") {
         return {
             ...state,
             changeReceivers: false,
-            receivers: action.payload
-        }
-    } else if (action.type === 'ADD_RECEIVER_SUCCESS') {
+            receivers: action.payload,
+        };
+    } else if (action.type === "ADD_RECEIVER_SUCCESS") {
         const receiver = action.payload;
         return {
             ...state,
             changeReceivers: true,
-            receivers: [...state.receivers, receiver]
-        }
-    } else if (action.type === 'ADD_RECEIVER_FAILED') {
+            receivers: [...state.receivers, receiver],
+        };
+    } else if (action.type === "ADD_RECEIVER_FAILED") {
         return {
             ...state,
-            msg: action.payload.msg
-        }
-    } else if (action.type === 'DELETE_RECEIVERS_SUCCESS') {
+            msg: action.payload.msg,
+        };
+    } else if (action.type === "DELETE_RECEIVERS_SUCCESS") {
         return {
             ...state,
             changeReceivers: true,
-            receivers: action.payload
-        }
-    } else if (action.type === 'GET_PAYMENT_SAVING_ACCOUNTS') {
-        const payment_savingAccounts = action.payload.map(i => Object.values(i));
+            receivers: action.payload,
+        };
+    } else if (action.type === "GET_PAYMENT_SAVING_ACCOUNTS") {
+        const payment_savingAccounts = action.payload.map((i) => Object.values(i));
         return {
             ...state,
-            payment_savingAccounts
-        }
+            payment_savingAccounts,
+        };
     }
     return state;
-}
+};
