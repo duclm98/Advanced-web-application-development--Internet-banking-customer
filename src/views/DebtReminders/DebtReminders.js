@@ -7,18 +7,24 @@ import GridItem from "components/Grid/GridItem.js";
 import GridContainer from "components/Grid/GridContainer.js";
 import CustomInput from "components/CustomInput/CustomInput.js";
 import Button from "components/CustomButtons/Button.js";
-import Table from "views/ReceiversList/Table";
+import CreatingDebtRemindersTable from "views/DebtReminders/CreatingDebtRemindersTable";
+import CreatedDebtRemindersTable from "views/DebtReminders/CreatedDebtRemindersTable";
 import Card from "components/Card/Card.js";
 import CardHeader from "components/Card/CardHeader.js";
 import CardBody from "components/Card/CardBody.js";
 
-import { accountAction } from "../../redux";
+import { accountAction, debtRemindersAction } from "../../redux";
 
 import styles from "assets/jss/material-dashboard-react/views/dashboardStyle.js";
 
 const useStyles = makeStyles(styles);
 
-const DebtReminders = ({ dispatch, desAccountNameFromState }) => {
+const DebtReminders = ({
+  dispatch,
+  desAccountNameFromState,
+  debtRemindersFromState,
+  createdDebtRemindersFromState,
+}) => {
   const classes = useStyles();
 
   const [input, setInput] = useState({
@@ -26,7 +32,12 @@ const DebtReminders = ({ dispatch, desAccountNameFromState }) => {
     accountName: "",
     debtMoney: 0,
     debtContent: "",
-    status:""
+    status: "",
+  });
+
+  const [table, setTable] = useState({
+    name: "Nhắc nợ đã tạo",
+    type: 0,
   });
 
   useEffect(() => {
@@ -41,14 +52,45 @@ const DebtReminders = ({ dispatch, desAccountNameFromState }) => {
   }, [desAccountNameFromState]);
 
   const HandleCreatDebtReminders = () => {
-    if(input.accountNumber===""||input.accountName===""||input.debtMoney===0||input.debtContent===""){
+    if (
+      input.accountNumber === "" ||
+      input.accountName === "" ||
+      input.debtMoney === 0 ||
+      input.debtContent === ""
+    ) {
       return setInput((prev) => ({
         ...prev,
         status: "Vui lòng nhập đầy đủ thông tin cần thiết!",
       }));
     }
-    
+    dispatch(
+      debtRemindersAction.createDebtReminders({
+        accountNumber: input.accountNumber,
+        debtContent: input.debtContent,
+        debtMoney: input.debtMoney,
+      })
+    );
+    setInput({
+      accountNumber: "",
+      accountName: "",
+      debtMoney: 0,
+      debtContent: "",
+      status: "Tạo nhắc nợ thành công.",
+    });
   };
+
+  useEffect(() => {
+    setInput((prev) => ({
+      ...prev,
+      status: debtRemindersFromState.msg,
+    }));
+  }, [debtRemindersFromState.msg]);
+
+  useEffect(() => {
+    if (debtRemindersFromState.changeList === true) {
+      dispatch(debtRemindersAction.getCreatingDebtReminders());
+    }
+  }, [debtRemindersFromState.changeList]);
 
   return (
     <div>
@@ -61,7 +103,6 @@ const DebtReminders = ({ dispatch, desAccountNameFromState }) => {
             <CardBody>
               <GridContainer>
                 <GridItem xs={12} sm={12} md={3}>
-                  <br />
                   <CustomInput
                     labelText="Số tài khoản"
                     formControlProps={{
@@ -97,7 +138,13 @@ const DebtReminders = ({ dispatch, desAccountNameFromState }) => {
                       disabled: false,
                     }}
                     type="number"
-                    onChange={(event) => {}}
+                    onChange={(event) => {
+                      const debtMoney = event.target.value;
+                      setInput((prev) => ({
+                        ...prev,
+                        debtMoney,
+                      }));
+                    }}
                   />
                   <CustomInput
                     labelText="Nội dung nhắc nợ"
@@ -107,15 +154,82 @@ const DebtReminders = ({ dispatch, desAccountNameFromState }) => {
                     inputProps={{
                       disabled: false,
                     }}
-                    onChange={(event) => {}}
+                    onChange={(event) => {
+                      const debtContent = event.target.value;
+                      setInput((prev) => ({
+                        ...prev,
+                        debtContent,
+                      }));
+                    }}
                   />
                   <h6 style={{ color: "red" }}>{input.status}</h6>
-                  <Button color="primary" onClick={HandleCreatDebtReminders}>
+                  <Button
+                    color="primary"
+                    style={{ width: "200px" }}
+                    onClick={HandleCreatDebtReminders}
+                  >
                     Tạo nhắc nợ
                   </Button>
                 </GridItem>
                 <GridItem xs={12} sm={12} md={9}>
-                  {/* <Table rows={receiversFromState}></Table> */}
+                  <GridContainer>
+                    <GridItem xs={12} sm={12} md={4}>
+                      <Button
+                        color="primary"
+                        style={{ width: "200px" }}
+                        onClick={() => {
+                          setTable((prev) => ({
+                            ...prev,
+                            name: "Nhắc nợ đã tạo",
+                            type: 0,
+                          }));
+                        }}
+                      >
+                        Nhắc nợ đã tạo
+                      </Button>
+                    </GridItem>
+                    <GridItem xs={12} sm={12} md={4}>
+                      <Button
+                        color="primary"
+                        style={{ width: "200px" }}
+                        onClick={() => {
+                          setTable((prev) => ({
+                            ...prev,
+                            name: "Nợ chưa thanh toán",
+                            type: 1,
+                          }));
+                        }}
+                      >
+                        Nợ chưa thanh toán
+                      </Button>
+                    </GridItem>
+                    <GridItem xs={12} sm={12} md={4}>
+                      <Button
+                        color="primary"
+                        style={{ width: "200px" }}
+                        onClick={() => {
+                          setTable((prev) => ({
+                            ...prev,
+                            name: "Nợ đã thanh toán",
+                            type: 2,
+                          }));
+                        }}
+                      >
+                        Nợ đã thanh toán
+                      </Button>
+                    </GridItem>
+                  </GridContainer>
+                  {table.type === 0 ? (
+                    <CreatingDebtRemindersTable
+                      tablename={table.name}
+                      rows={debtRemindersFromState.list || []}
+                    ></CreatingDebtRemindersTable>
+                  ) : (
+                    <CreatedDebtRemindersTable
+                      tablename={table.name}
+                      rows={createdDebtRemindersFromState.list || []}
+                    ></CreatedDebtRemindersTable>
+                  )}
                 </GridItem>
               </GridContainer>
             </CardBody>
@@ -132,6 +246,8 @@ const mapStateToProps = (state) => {
     : "";
   return {
     desAccountNameFromState,
+    debtRemindersFromState: state.debtReminders,
+    createdDebtRemindersFromState: state.createdDebtReminders,
   };
 };
 

@@ -26,9 +26,12 @@ import { accountAction } from '../../redux';
 
 const headCells = [
   { id: '_id', numeric: false, disablePadding: true, label: 'ID' },
-  { id: 'accountNumber', numeric: true, disablePadding: false, label: 'Số tài khoản' },
-  { id: 'accountName', numeric: true, disablePadding: false, label: 'Tên tài khoản' },
-  { id: 'accountNameReminiscent', numeric: true, disablePadding: false, label: 'Tên gợi nhớ' },
+  { id: 'desAccountNumber', numeric: true, disablePadding: false, label: 'Số tài khoản nợ' },
+  { id: 'desAccountName', numeric: true, disablePadding: false, label: 'Tên tài khoản nợ' },
+  { id: 'debtMoney', numeric: true, disablePadding: false, label: 'Số tiền' },
+  { id: 'debtContent', numeric: true, disablePadding: false, label: 'Nội dung' },
+  { id: 'datetime', numeric: true, disablePadding: false, label: 'Ngày giờ tạo' },
+  { id: 'status', numeric: true, disablePadding: false, label: 'Trạng thái' },
 ];
 
 function descendingComparator(a, b, orderBy) {
@@ -132,7 +135,7 @@ const useToolbarStyles = makeStyles((theme) => ({
 
 const EnhancedTableToolbar = (props) => {
   const classes = useToolbarStyles();
-  const { numSelected, dispatch, selected } = props;
+  const { numSelected, dispatch, selected, tablename } = props;
 
   return (
     <Toolbar
@@ -146,7 +149,7 @@ const EnhancedTableToolbar = (props) => {
         </Typography>
       ) : (
         <Typography className={classes.title} variant="h6" id="tableTitle" component="div">
-          Danh bạ thụ hưởng
+          {tablename}
         </Typography>
       )}
 
@@ -196,7 +199,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const EnhancedTable = (props) => {
-  const { rows, dispatch } = props;
+  const { dispatch, rows, tablename } = props;
   const classes = useStyles();
   const [order, setOrder] = React.useState('asc');
   const [orderBy, setOrderBy] = React.useState();
@@ -260,7 +263,7 @@ const EnhancedTable = (props) => {
   return (
     <div className={classes.root}>
       <Paper className={classes.paper}>
-        <EnhancedTableToolbar numSelected={selected.length} dispatch={dispatch} selected={selected} />
+        <EnhancedTableToolbar tablename={tablename} numSelected={selected.length} dispatch={dispatch} selected={selected} />
         <TableContainer>
           <Table
             className={classes.table}
@@ -303,9 +306,12 @@ const EnhancedTable = (props) => {
                       <TableCell component="th" id={labelId} scope="row" padding="none">
                         {row._id}
                       </TableCell>
-                      <TableCell align="right">{row.accountNumber}</TableCell>
-                      <TableCell align="right">{row.accountName}</TableCell>
-                      <TableCell align="right">{row.accountNameReminiscent}</TableCell>
+                      <TableCell align="right">{row.desAccountNumber}</TableCell>
+                      <TableCell align="right">{row.desAccountName}</TableCell>
+                      <TableCell align="right">{row.debtMoney}</TableCell>
+                      <TableCell align="right">{row.debtContent}</TableCell>
+                      <TableCell align="right">{row.datetime}</TableCell>
+                      <TableCell align="right">{row.status}</TableCell>
                     </TableRow>
                   );
                 })}

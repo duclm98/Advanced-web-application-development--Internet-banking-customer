@@ -190,7 +190,76 @@ export const transactionAction = {
     },
 };
 
-function setupSSE() {
+export const debtRemindersAction = {
+    createDebtReminders: (debtReminders) => async (dispatch) => {
+        instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
+            localStorageVariable.storeAccessToken
+        );
+        try {
+            const {
+                data
+            } = await instance.post(
+                `debt-reminders`, debtReminders
+            );
+            dispatch({
+                type: "ADD_DEBT_REMINDERS_SUCCESS",
+                payload: data
+            });
+        } catch (error) {
+            let msg = 'Có lỗi trong quá trình tạo nhắc nợ!';
+            if (error.response) {
+                msg = error.response.data;
+            }
+            dispatch({
+                type: "ADD_DEBT_REMINDERS_FAILED",
+                payload: {
+                    msg
+                }
+            });
+        }
+    },
+    getCreatingDebtReminders: () => async (dispatch) => {
+        instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
+            localStorageVariable.storeAccessToken
+        );
+        try {
+            const {
+                data
+            } = await instance.get(`debt-reminders`);
+            dispatch({
+                type: "GET_CREATING_DEBT_REMINDERS",
+                payload: data,
+            });
+        } catch (error) {}
+    },
+    getCreatedDebtReminders: () => async dispatch => {
+        if (typeof EventSource === "undefined") {
+            console.log("not support");
+            return;
+        }
+
+        var src = new EventSource(
+            `${process.env.REACT_APP_BASE_BACKEND_URL}debt-reminders/debt-reminders-add-event`
+        );
+
+        src.onerror = function (e) {
+            console.log("error: " + e);
+        };
+
+        src.addEventListener("DEBT_REMINDERS_ADDED", function (e) {
+                const data = JSON.parse(e.data);
+                dispatch({
+                    type: "GET_CREATED_DEBT_REMINDERS",
+                    payload: data,
+                });
+            },
+            false
+        );
+    }
+};
+
+let newCreatedDebtReminders = {};
+const getCreatedDebtReminders = () => {
     if (typeof EventSource === "undefined") {
         console.log("not support");
         return;
@@ -204,19 +273,23 @@ function setupSSE() {
         console.log("error: " + e);
     };
 
-    src.addEventListener(
-        "DEBT_REMINDERS_ADDED",
-        function (e) {
+    src.addEventListener("DEBT_REMINDERS_ADDED", function (e) {
             const data = JSON.parse(e.data);
+            // newCreatedDebtReminders = {
+            //     _id: data._id,
+            //     desAccountNumber: data.accountNumber,
+            //     desAccountName: data.accountName,
+            //     debtMoney: data.debtMoney,
+            //     debtContent: data.debtContent,
+            //     datetime: data.datetime,
+            //     status: data.isPay
+            // };
+            newCreatedDebtReminders = data;
         },
         false
     );
 }
-setupSSE();
-
-export const debtRemindersAction = {
-    createDebtReminders: (debtReminders) => async (dispatch) => {},
-};
+getCreatedDebtReminders();
 
 const initialState = {
     accessToken: localStorage.getItem(localStorageVariable.storeAccessToken),
@@ -225,6 +298,16 @@ const initialState = {
     receivers: [],
     changeReceivers: true,
     payment_savingAccounts: [],
+    debtReminders: {
+        msg: '',
+        list: [],
+        changeList: true
+    },
+    createdDebtReminders: {
+        msg: '',
+        list: [],
+        changeList: true
+    }
 };
 
 export default (state = initialState, action) => {
@@ -233,9 +316,13 @@ export default (state = initialState, action) => {
         state.refreshToken = action.payload.refreshToken;
         state.account = action.payload.account;
         return {
+            changeReceivers: true,
             accessToken: action.payload.accessToken,
             refreshToken: action.payload.refreshToken,
             account: action.payload.account,
+            debtReminders: {
+                changeList: true,
+            }
         };
     } else if (action.type === "LOGIN_FAILED") {
         return {
@@ -282,6 +369,41 @@ export default (state = initialState, action) => {
             ...state,
             payment_savingAccounts,
         };
+    } else if (action.type === "GET_CREATING_DEBT_REMINDERS") {
+        state.debtReminders.changeList = false;
+        return {
+            ...state,
+            debtReminders: {
+                list: action.payload,
+                changeList: false
+            }
+        }
+    } else if (action.type === "GET_CREATED_DEBT_REMINDERS") {
+        state.createdDebtReminders.changeList = false;
+        return {
+            ...state,
+            createdDebtReminders: {
+                list: [...state.createdDebtReminders.list, action.payload],
+                changeList: false
+            }
+        }
+    } else if (action.type === "ADD_DEBT_REMINDERS_SUCCESS") {
+        return {
+            ...state,
+            debtReminders: {
+                list: [...state.debtReminders.list, action.payload],
+            },
+            createdDebtReminders:{
+                list:[...state.createdDebtReminders.list, newCreatedDebtReminders]
+            }
+        }
+    } else if (action.type === "ADD_DEBT_REMINDERS_FAILED") {
+        return {
+            ...state,
+            debtReminders: {
+                msg: action.payload.msg
+            }
+        }
     }
     return state;
 };
