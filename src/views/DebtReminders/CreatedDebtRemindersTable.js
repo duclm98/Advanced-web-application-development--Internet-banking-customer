@@ -288,6 +288,7 @@ const EnhancedTable = (props) => {
 
                   return (
                     <TableRow
+                      key={row._id}
                       hover
                       onClick={(event) => handleClick(event, row._id)}
                       role="checkbox"
