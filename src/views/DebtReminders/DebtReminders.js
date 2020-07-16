@@ -13,11 +13,35 @@ import Card from "components/Card/Card.js";
 import CardHeader from "components/Card/CardHeader.js";
 import CardBody from "components/Card/CardBody.js";
 
-import { accountAction, debtRemindersAction } from "../../redux";
+import { accountAction, debtRemindersAction, isChange } from "../../redux";
 
 import styles from "assets/jss/material-dashboard-react/views/dashboardStyle.js";
 
 const useStyles = makeStyles(styles);
+
+let data = {};
+const sse = () => {
+  if (typeof EventSource === "undefined") {
+      console.log("not support");
+      return;
+  }
+
+  var src = new EventSource(
+      `${process.env.REACT_APP_BASE_BACKEND_URL}debt-reminders/debt-reminders-add-event`
+  );
+
+  src.onerror = function (e) {
+      console.log("error: " + e);
+  };
+
+  src.addEventListener("DEBT_REMINDERS_ADDED", function (e) {
+          const response = JSON.parse(e.data);
+          data = response;
+      },
+      false
+  );
+}
+sse();
 
 const DebtReminders = ({
   dispatch,
@@ -90,7 +114,14 @@ const DebtReminders = ({
     if (debtRemindersFromState.changeList === true) {
       dispatch(debtRemindersAction.getCreatingDebtReminders());
     }
-  }, [debtRemindersFromState.changeList]);
+    if(createdDebtRemindersFromState.changeList === true){
+      dispatch(debtRemindersAction.getCreatedDebtReminders());
+    }
+  }, [debtRemindersFromState.changeList, createdDebtRemindersFromState.changeList]);
+
+  useEffect(()=>{
+    console.log('abc')
+  },[data])
 
   return (
     <div>

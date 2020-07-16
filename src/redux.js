@@ -233,33 +233,23 @@ export const debtRemindersAction = {
         } catch (error) {}
     },
     getCreatedDebtReminders: () => async dispatch => {
-        if (typeof EventSource === "undefined") {
-            console.log("not support");
-            return;
-        }
-
-        var src = new EventSource(
-            `${process.env.REACT_APP_BASE_BACKEND_URL}debt-reminders/debt-reminders-add-event`
+        instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
+            localStorageVariable.storeAccessToken
         );
-
-        src.onerror = function (e) {
-            console.log("error: " + e);
-        };
-
-        src.addEventListener("DEBT_REMINDERS_ADDED", function (e) {
-                const data = JSON.parse(e.data);
-                dispatch({
-                    type: "GET_CREATED_DEBT_REMINDERS",
-                    payload: data,
-                });
-            },
-            false
-        );
+        try {
+            const {
+                data
+            } = await instance.get(`debt-reminders/created-debt-reminders`);
+            dispatch({
+                type: "GET_CREATED_DEBT_REMINDERS",
+                payload: data,
+            });
+        } catch (error) {}
     }
 };
 
-let newCreatedDebtReminders = {};
-const getCreatedDebtReminders = () => {
+let newCreatedDebtReminders = false;
+const getNewCreatedDebtReminders = () => {
     if (typeof EventSource === "undefined") {
         console.log("not support");
         return;
@@ -284,12 +274,13 @@ const getCreatedDebtReminders = () => {
             //     datetime: data.datetime,
             //     status: data.isPay
             // };
-            newCreatedDebtReminders = data;
+            newCreatedDebtReminders = true;
         },
         false
     );
 }
-getCreatedDebtReminders();
+// getNewCreatedDebtReminders();
+export const isChange = newCreatedDebtReminders;
 
 const initialState = {
     accessToken: localStorage.getItem(localStorageVariable.storeAccessToken),
@@ -306,11 +297,13 @@ const initialState = {
     createdDebtReminders: {
         msg: '',
         list: [],
-        changeList: true
+        changeList: true,
+        newCreatedDebtReminders
     }
 };
 
 export default (state = initialState, action) => {
+    state.createdDebtReminders.newCreatedDebtReminders = newCreatedDebtReminders;
     if (action.type === "LOGIN_SUCCESS") {
         state.accessToken = action.payload.accessToken;
         state.refreshToken = action.payload.refreshToken;
@@ -383,8 +376,8 @@ export default (state = initialState, action) => {
         return {
             ...state,
             createdDebtReminders: {
-                list: [...state.createdDebtReminders.list, action.payload],
-                changeList: false
+                list: action.payload,
+                changeList: false,
             }
         }
     } else if (action.type === "ADD_DEBT_REMINDERS_SUCCESS") {
