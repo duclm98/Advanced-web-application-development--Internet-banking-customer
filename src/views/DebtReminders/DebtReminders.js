@@ -23,14 +23,15 @@ const DebtReminders = ({
   dispatch,
   desAccountNameFromState,
   debtRemindersFromState,
-  createdDebtRemindersFromState,
+  unpaidCreatedDebtRemindersFromState,
+  paidCreatedDebtRemindersFromState,
 }) => {
   const classes = useStyles();
 
   const [input, setInput] = useState({
     accountNumber: "",
     accountName: "",
-    debtMoney: 0,
+    debtMoney: null,
     debtContent: "",
     status: "",
   });
@@ -38,8 +39,9 @@ const DebtReminders = ({
   const [table, setTable] = useState({
     name: "Nhắc nợ đã tạo",
     type: 0,
-    data: [],
-    isData: false,
+    creatingDebtReminders: [],
+    unpaidCreatedDebtReminders: [],
+    paidCreatedDebtReminders: [],
   });
 
   // Gửi acction lấy accountName từ accountNumber
@@ -60,7 +62,7 @@ const DebtReminders = ({
     if (
       input.accountNumber === "" ||
       input.accountName === "" ||
-      input.debtMoney === 0 ||
+      input.debtMoney === null ||
       input.debtContent === ""
     ) {
       return setInput((prev) => ({
@@ -78,7 +80,7 @@ const DebtReminders = ({
     setInput({
       accountNumber: "",
       accountName: "",
-      debtMoney: 0,
+      debtMoney: null,
       debtContent: "",
       status: "Tạo nhắc nợ thành công.",
     });
@@ -97,22 +99,23 @@ const DebtReminders = ({
     if (debtRemindersFromState.changeList === true) {
       dispatch(debtRemindersAction.getCreatingDebtReminders());
     }
-    if (createdDebtRemindersFromState.changeList === true) {
-      dispatch(debtRemindersAction.getCreatedDebtReminders());
+    if (unpaidCreatedDebtRemindersFromState.changeList === true) {
+      dispatch(debtRemindersAction.getUnpaidCreatedDebtReminders());
     }
-    setInput((prev) => ({
-      ...prev,
-      isData: true,
-    }));
+    if (paidCreatedDebtRemindersFromState.changeList === true) {
+      dispatch(debtRemindersAction.getPaidCreatedDebtReminders());
+    }
   }, [
     debtRemindersFromState.changeList,
-    createdDebtRemindersFromState.changeList,
+    unpaidCreatedDebtRemindersFromState.changeList,
+    paidCreatedDebtRemindersFromState.changeList,
   ]);
 
   // Xử lý real-time cho bên được tạo nhắc nợ (khi bên tạo nhắc nợ tạo 1 nhắc nợ thì bên được nhắc lập tức thêm 1 dòng vào nhắc nợ chưa thanh toán)
   const [sseResponse, setSseResponse] = useState(null);
 
   const sse = (url) => {
+    setSseResponse(null);
     if (typeof EventSource === "undefined") {
       console.log("not support");
       return;
@@ -136,43 +139,33 @@ const DebtReminders = ({
   useEffect(() => {
     const url = `${process.env.REACT_APP_BASE_BACKEND_URL}debt-reminders/debt-reminders-add-event`;
     sse(url);
-    dispatch(debtRemindersAction.getCreatedDebtReminders());
+    if (sseResponse) {
+      const _IDs = table.unpaidCreatedDebtReminders.map((i) => i._id);
+      if (!_IDs.includes(sseResponse._id)) {
+        setTable((prev) => ({
+          ...prev,
+          unpaidCreatedDebtReminders: [
+            ...table.unpaidCreatedDebtReminders,
+            sseResponse,
+          ],
+        }));
+      }
+    }
   }, [sseResponse]);
 
   // Set data cho table
   useEffect(() => {
-    let data = [];
-
-    if (table.type === 0) {
-      if (debtRemindersFromState.list) {
-        data = debtRemindersFromState.list;
-      }
-    } else if (table.type === 1) {
-      if (createdDebtRemindersFromState.list) {
-        createdDebtRemindersFromState.list.map((i) => {
-          if (!i.isPay) {
-            data.push(i);
-          }
-        });
-      }
-    } else if (table.type === 2) {
-      if (createdDebtRemindersFromState.list) {
-        createdDebtRemindersFromState.list.map((i) => {
-          if (i.isPay) {
-            data.push(i);
-          }
-        });
-      }
-    }
-
     setTable((prev) => ({
       ...prev,
-      data,
+      creatingDebtReminders: debtRemindersFromState.list || [],
+      unpaidCreatedDebtReminders:
+        unpaidCreatedDebtRemindersFromState.list || [],
+      paidCreatedDebtReminders: paidCreatedDebtRemindersFromState.list || [],
     }));
   }, [
-    table.type,
     debtRemindersFromState.list,
-    createdDebtRemindersFromState.list,
+    unpaidCreatedDebtRemindersFromState.list,
+    paidCreatedDebtRemindersFromState.list,
   ]);
 
   return (
@@ -221,6 +214,7 @@ const DebtReminders = ({
                       disabled: false,
                     }}
                     type="number"
+                    value={input.debtMoney}
                     onChange={(event) => {
                       const debtMoney = event.target.value;
                       setInput((prev) => ({
@@ -237,6 +231,7 @@ const DebtReminders = ({
                     inputProps={{
                       disabled: false,
                     }}
+                    value={input.debtContent}
                     onChange={(event) => {
                       const debtContent = event.target.value;
                       setInput((prev) => ({
@@ -305,14 +300,21 @@ const DebtReminders = ({
                   {table.type === 0 ? (
                     <CreatingDebtRemindersTable
                       tablename={table.name}
-                      rows={table.data}
+                      rows={table.creatingDebtReminders}
                     ></CreatingDebtRemindersTable>
-                  ) : (
+                  ) : null}
+                  {table.type === 1 ? (
                     <CreatedDebtRemindersTable
                       tablename={table.name}
-                      rows={table.data}
+                      rows={table.unpaidCreatedDebtReminders}
                     ></CreatedDebtRemindersTable>
-                  )}
+                  ) : null}
+                  {table.type === 2 ? (
+                    <CreatedDebtRemindersTable
+                      tablename={table.name}
+                      rows={table.paidCreatedDebtReminders}
+                    ></CreatedDebtRemindersTable>
+                  ) : null}
                 </GridItem>
               </GridContainer>
             </CardBody>
@@ -330,7 +332,8 @@ const mapStateToProps = (state) => {
   return {
     desAccountNameFromState,
     debtRemindersFromState: state.debtReminders,
-    createdDebtRemindersFromState: state.createdDebtReminders,
+    unpaidCreatedDebtRemindersFromState: state.unpaidCreatedDebtReminders,
+    paidCreatedDebtRemindersFromState: state.paidCreatedDebtReminders,
   };
 };
 

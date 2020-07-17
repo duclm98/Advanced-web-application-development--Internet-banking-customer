@@ -232,16 +232,30 @@ export const debtRemindersAction = {
             });
         } catch (error) {}
     },
-    getCreatedDebtReminders: () => async dispatch => {
+    getUnpaidCreatedDebtReminders: () => async dispatch => {
         instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
             localStorageVariable.storeAccessToken
         );
         try {
             const {
                 data
-            } = await instance.get(`debt-reminders/created-debt-reminders`);
+            } = await instance.get(`debt-reminders/unpaid-created-debt-reminders`);
             dispatch({
-                type: "GET_CREATED_DEBT_REMINDERS",
+                type: "GET_UNPAID_CREATED_DEBT_REMINDERS",
+                payload: data,
+            });
+        } catch (error) {}
+    },
+    getPaidCreatedDebtReminders: () => async dispatch => {
+        instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
+            localStorageVariable.storeAccessToken
+        );
+        try {
+            const {
+                data
+            } = await instance.get(`debt-reminders/paid-created-debt-reminders`);
+            dispatch({
+                type: "GET_PAID_CREATED_DEBT_REMINDERS",
                 payload: data,
             });
         } catch (error) {}
@@ -260,7 +274,12 @@ const initialState = {
         list: [],
         changeList: true
     },
-    createdDebtReminders: {
+    unpaidCreatedDebtReminders: {
+        msg: '',
+        list: [],
+        changeList: true,
+    },
+    paidCreatedDebtReminders: {
         msg: '',
         list: [],
         changeList: true,
@@ -338,11 +357,20 @@ export default (state = initialState, action) => {
                 changeList: false
             }
         }
-    } else if (action.type === "GET_CREATED_DEBT_REMINDERS") {
-        state.createdDebtReminders.changeList = false;
+    } else if (action.type === "GET_UNPAID_CREATED_DEBT_REMINDERS") {
+        state.unpaidCreatedDebtReminders.changeList = false;
         return {
             ...state,
-            createdDebtReminders: {
+            unpaidCreatedDebtReminders: {
+                list: action.payload,
+                changeList: false,
+            }
+        }
+    }else if (action.type === "GET_PAID_CREATED_DEBT_REMINDERS") {
+        state.paidCreatedDebtReminders.changeList = false;
+        return {
+            ...state,
+            paidCreatedDebtReminders: {
                 list: action.payload,
                 changeList: false,
             }
