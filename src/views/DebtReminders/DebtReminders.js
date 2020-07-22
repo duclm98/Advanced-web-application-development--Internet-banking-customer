@@ -31,7 +31,7 @@ const DebtReminders = ({
   const [input, setInput] = useState({
     accountNumber: "",
     accountName: "",
-    debtMoney: null,
+    debtMoney: "",
     debtContent: "",
     status: "",
   });
@@ -58,11 +58,11 @@ const DebtReminders = ({
   }, [desAccountNameFromState]);
 
   // Tạo nhắc nợ
-  const HandleCreatDebtReminders = () => {
+  const HandleCreatDebtReminders = async () => {
     if (
       input.accountNumber === "" ||
       input.accountName === "" ||
-      input.debtMoney === null ||
+      input.debtMoney === "" ||
       input.debtContent === ""
     ) {
       return setInput((prev) => ({
@@ -70,29 +70,27 @@ const DebtReminders = ({
         status: "Vui lòng nhập đầy đủ thông tin cần thiết!",
       }));
     }
-    dispatch(
+    const createDebtReminders = await dispatch(
       debtRemindersAction.createDebtReminders({
         accountNumber: input.accountNumber,
         debtContent: input.debtContent,
         debtMoney: input.debtMoney,
       })
     );
-    setInput({
+    if (!createDebtReminders.status) {
+      return setInput((prev) => ({
+        ...prev,
+        status: createDebtReminders.msg,
+      }));
+    }
+    return setInput({
       accountNumber: "",
       accountName: "",
-      debtMoney: null,
+      debtMoney: "",
       debtContent: "",
       status: "Tạo nhắc nợ thành công.",
     });
   };
-
-  // Trả về status khi tạo nhắc nợ
-  useEffect(() => {
-    setInput((prev) => ({
-      ...prev,
-      status: debtRemindersFromState.msg,
-    }));
-  }, [debtRemindersFromState.msg]);
 
   // Lấy danh sách nhắc nợ đã tạo hoặc nhắc nợ được tạo
   useEffect(() => {
@@ -112,10 +110,10 @@ const DebtReminders = ({
   ]);
 
   // Xử lý real-time cho bên được tạo nhắc nợ (khi bên tạo nhắc nợ tạo 1 nhắc nợ thì bên được nhắc lập tức thêm 1 dòng vào nhắc nợ chưa thanh toán)
-  const [sseResponse, setSseResponse] = useState(null);
+  const [sseCreatedDebtReminders, setSseCreatedDebtReminders] = useState(null);
 
-  const sse = (url) => {
-    setSseResponse(null);
+  const sse = (url, event) => {
+    setSseCreatedDebtReminders(null);
     if (typeof EventSource === "undefined") {
       console.log("not support");
       return;
@@ -128,9 +126,9 @@ const DebtReminders = ({
     };
 
     src.addEventListener(
-      "DEBT_REMINDERS_ADDED",
+      event,
       function (e) {
-        setSseResponse(JSON.parse(e.data));
+        setSseCreatedDebtReminders(JSON.parse(e.data));
       },
       false
     );
@@ -138,20 +136,112 @@ const DebtReminders = ({
 
   useEffect(() => {
     const url = `${process.env.REACT_APP_BASE_BACKEND_URL}debt-reminders/debt-reminders-add-event`;
-    sse(url);
-    if (sseResponse) {
+    sse(url, "DEBT_REMINDERS_ADDED");
+    if (sseCreatedDebtReminders) {
       const _IDs = table.unpaidCreatedDebtReminders.map((i) => i._id);
-      if (!_IDs.includes(sseResponse._id)) {
+      if (!_IDs.includes(sseCreatedDebtReminders._id)) {
         setTable((prev) => ({
           ...prev,
           unpaidCreatedDebtReminders: [
             ...table.unpaidCreatedDebtReminders,
-            sseResponse,
+            sseCreatedDebtReminders,
           ],
         }));
       }
     }
-  }, [sseResponse]);
+  }, [sseCreatedDebtReminders]);
+
+  // Xử lý real-time khi bên tạo hủy nhắc nợ (khi bên tạo nhắc nợ hủy 1 nhắc nợ thì bên được nhắc lập tức xóa 1 dòng ở nhắc nợ chưa thanh toán)
+  const [
+    sseRemoveCreatedDebtReminders,
+    setSseRemoveCreatedDebtReminders,
+  ] = useState(null);
+
+  const sse1 = (url, event) => {
+    setSseRemoveCreatedDebtReminders(null);
+    if (typeof EventSource === "undefined") {
+      console.log("not support");
+      return;
+    }
+
+    const src = new EventSource(url);
+
+    src.onerror = function (e) {
+      console.log("error: " + e);
+    };
+
+    src.addEventListener(
+      event,
+      function (e) {
+        setSseRemoveCreatedDebtReminders(JSON.parse(e.data));
+      },
+      false
+    );
+  };
+
+  useEffect(() => {
+    const url = `${process.env.REACT_APP_BASE_BACKEND_URL}debt-reminders/debt-reminders-remove-event`;
+    sse1(url, "DEBT_REMINDERS_REMOVED");
+    if (sseRemoveCreatedDebtReminders) {
+      const data = [];
+      table.unpaidCreatedDebtReminders.map((i) => {
+        if (sseRemoveCreatedDebtReminders._id !== i._id) {
+          data.push(i);
+        }
+      });
+      setTable((prev) => ({
+        ...prev,
+        unpaidCreatedDebtReminders: data,
+      }));
+    }
+  }, [sseRemoveCreatedDebtReminders]);
+
+  // Xử lý real-time khi bên nợ hủy nhắc nợ (khi bên nợ hủy 1 nhắc nợ thì bên tạo lập tức cập nhật lại danh sách nhắc nợ đã tạo)
+  const [
+    sseRemoveCreatingDebtReminders,
+    setSseRemoveCreatingDebtReminders,
+  ] = useState(null);
+
+  const sse2 = (url, event) => {
+    setSseRemoveCreatingDebtReminders(null);
+    if (typeof EventSource === "undefined") {
+      console.log("not support");
+      return;
+    }
+
+    const src = new EventSource(url);
+
+    src.onerror = function (e) {
+      console.log("error: " + e);
+    };
+
+    src.addEventListener(
+      event,
+      function (e) {
+        setSseRemoveCreatingDebtReminders(JSON.parse(e.data));
+      },
+      false
+    );
+  };
+
+  useEffect(() => {
+    const url = `${process.env.REACT_APP_BASE_BACKEND_URL}debt-reminders/created-debt-reminders-remove-event`;
+    sse2(url, "CREATED_DEBT_REMINDERS_REMOVED");
+    if (sseRemoveCreatingDebtReminders) {
+      let data = [];
+      table.creatingDebtReminders.map((i) => {
+        if (sseRemoveCreatingDebtReminders._id !== i._id) {
+          data.push(sseRemoveCreatingDebtReminders);
+        } else {
+          data.push(i);
+        }
+      });
+      setTable((prev) => ({
+        ...prev,
+        creatingDebtReminders: data
+      }));
+    }
+  }, [sseRemoveCreatingDebtReminders]);
 
   // Set data cho table
   useEffect(() => {
@@ -187,6 +277,7 @@ const DebtReminders = ({
                     inputProps={{
                       disabled: false,
                     }}
+                    value={input.accountNumber}
                     onChange={(event) => {
                       const accountNumber = event.target.value;
                       setInput((prev) => ({

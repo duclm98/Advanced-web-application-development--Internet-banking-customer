@@ -1,9 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import clsx from "clsx";
 import { lighten, makeStyles } from "@material-ui/core/styles";
-import Button from "components/CustomButtons/Button.js";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
@@ -29,7 +28,12 @@ import DialogContent from "@material-ui/core/DialogContent";
 import DialogContentText from "@material-ui/core/DialogContentText";
 import DialogTitle from "@material-ui/core/DialogTitle";
 
-import { accountAction } from "../../redux";
+import Button from "components/CustomButtons/Button.js";
+import GridItem from "components/Grid/GridItem.js";
+import GridContainer from "components/Grid/GridContainer.js";
+import CustomInput from "components/CustomInput/CustomInput.js";
+
+import { debtRemindersAction } from "../../redux";
 
 const headCells = [
   { id: "_id", numeric: false, disablePadding: true, label: "ID" },
@@ -204,10 +208,7 @@ const EnhancedTableToolbar = (props) => {
 
       {numSelected > 0 ? (
         <Tooltip title="Hủy nhắc nợ">
-          <IconButton
-            aria-label="delete"
-            onClick={handleClickOpen}
-          >
+          <IconButton aria-label="delete" onClick={handleClickOpen}>
             <DeleteIcon />
           </IconButton>
         </Tooltip>
@@ -315,8 +316,42 @@ const EnhancedTable = (props) => {
 
   const [open, setOpen] = React.useState(false);
 
+  const [inputRemoving, setInputRemoving] = useState({
+    content: "",
+    status: "",
+  });
+
   const handleClose = () => {
+    setInputRemoving((prev) => ({
+      ...prev,
+      content: "",
+      status: "",
+    }));
     setOpen(false);
+  };
+
+  const handleRemoveDebtReminders = async () => {
+    if (inputRemoving.content !== "") {
+      const removeDebtReminders = await dispatch(
+        debtRemindersAction.removeDebtReminders(
+          selected[0],
+          inputRemoving.content
+        )
+      );
+      if (removeDebtReminders.status) {
+        return setOpen(false);
+      }
+      return setInputRemoving((prev) => ({
+        ...prev,
+        content: "",
+        status: removeDebtReminders.msg,
+      }));
+    }
+    return setInputRemoving((prev) => ({
+      ...prev,
+      content: "",
+      status: "Vui lòng nhập đầy đủ thông tin cần thiết!",
+    }));
   };
 
   return (
@@ -328,19 +363,39 @@ const EnhancedTable = (props) => {
         aria-describedby="alert-dialog-description"
       >
         <DialogTitle id="alert-dialog-title">
-          {"Use Google's location service?"}
+          {"Bạn muốn hủy nhắc nợ?"}
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
-            Let Google help apps determine location. This means sending
-            anonymous location data to Google, even when no apps are running.
+            <GridContainer>
+              <GridItem xs={12} sm={12} md={12}>
+                <CustomInput
+                  labelText="Nội dung hủy nhắc nợ"
+                  formControlProps={{
+                    fullWidth: true,
+                  }}
+                  inputProps={{
+                    disabled: false,
+                  }}
+                  value={inputRemoving.content}
+                  onChange={(event) => {
+                    const content = event.target.value;
+                    setInputRemoving((prev) => ({
+                      ...prev,
+                      content,
+                    }));
+                  }}
+                />
+                <h6 style={{ color: "red" }}>{inputRemoving.status}</h6>
+              </GridItem>
+            </GridContainer>
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} color="primary">
             Trở lại
           </Button>
-          <Button onClick={handleClose} color="primary" autoFocus>
+          <Button onClick={handleRemoveDebtReminders} color="primary" autoFocus>
             Xóa nhắc nợ
           </Button>
         </DialogActions>
