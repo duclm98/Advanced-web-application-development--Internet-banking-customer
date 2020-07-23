@@ -91,7 +91,15 @@ export const accountAction = {
                 type: "GET_ACCOUNT",
                 payload: data,
             });
-        } catch (error) {}
+            return {
+                status: true,
+                data
+            }
+        } catch (error) {
+            return {
+                status: false
+            }
+        }
     },
     getReceivers: () => async (dispatch) => {
         instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
@@ -169,6 +177,30 @@ export const accountAction = {
 };
 
 export const transactionAction = {
+    getOTP: () => async _ => {
+        instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
+            localStorageVariable.storeAccessToken
+        );
+        try {
+            const {
+                data
+            } = await instance.post(`transactions/send-otp`);
+            return {
+                status: true,
+                msg: data
+            }
+
+        } catch (error) {
+            let msg = 'Có lỗi trong quá trình tạo nhắc nợ!';
+            if (error.response) {
+                msg = error.response.data;
+            }
+            return {
+                status: false,
+                msg
+            }
+        }
+    },
     getInterbankAccount: (accountNumberFromBody) => async (dispatch) => {
         const accountNumber = accountNumberFromBody ?
             accountNumberFromBody :
@@ -191,6 +223,24 @@ export const transactionAction = {
 };
 
 export const debtRemindersAction = {
+    detail: (_id) => async _ => {
+        instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
+            localStorageVariable.storeAccessToken
+        );
+        try {
+            const {
+                data
+            } = await instance.get(`debt-reminders/detail/${_id}`);
+            return {
+                status: true,
+                data
+            }
+        } catch (error) {
+            return {
+                status: false
+            }
+        }
+    },
     getCreatingDebtReminders: () => async (dispatch) => {
         instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
             localStorageVariable.storeAccessToken
@@ -307,6 +357,36 @@ export const debtRemindersAction = {
             });
             return {
                 status: true
+            }
+        } catch (error) {
+            let msg = 'Có lỗi trong quá trình hủy nhắc nợ!';
+            if (error.response) {
+                msg = error.response.data;
+            }
+            return {
+                status: false,
+                msg
+            }
+        }
+    },
+    paymentCreatedDebtReminders: (_id, otp, debtContent) => async dispatch => {
+        instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
+            localStorageVariable.storeAccessToken
+        );
+        try {
+            const {
+                data
+            } = await instance.post(`debt-reminders/payment-created-debt-reminders/${_id}`, {
+                otp,
+                debtContent
+            });
+            dispatch({
+                type: "PAYMENT_CREATED_DEBT_REMINDERS_SUCCESS",
+                payload: data
+            });
+            return {
+                status: true,
+                data
             }
         } catch (error) {
             let msg = 'Có lỗi trong quá trình hủy nhắc nợ!';
@@ -442,23 +522,41 @@ export default (state = initialState, action) => {
         return {
             ...state,
             debtReminders: {
-                list: [...state.debtReminders.list.map(i => {
+                list: state.debtReminders.list.map(i => {
                     if (i._id === action.payload._id) {
                         return action.payload;
                     }
                     return i
-                })],
+                }),
             }
         }
     } else if (action.type === "REMOVE_CREATED_DEBT_REMINDERS_SUCCESS") {
+        let data = [];
+        state.unpaidCreatedDebtReminders.list.map(i => {
+            if (i._id !== action.payload._id) {
+                data.push(i);
+            }
+        });
         return {
             ...state,
             unpaidCreatedDebtReminders: {
-                list: [...state.debtReminders.list.map(i => {
-                    if (i._id !== action.payload._id) {
-                        return i
-                    }
-                })],
+                list: data,
+            }
+        }
+    } else if (action.type === "PAYMENT_CREATED_DEBT_REMINDERS_SUCCESS") {
+        let data = [];
+        state.unpaidCreatedDebtReminders.list.map(i => {
+            if (i._id !== action.payload.debtReminders._id) {
+                data.push(i)
+            }
+        });
+        return {
+            ...state,
+            unpaidCreatedDebtReminders: {
+                list: data
+            },
+            paidCreatedDebtReminders: {
+                list: [...state.paidCreatedDebtReminders.list, action.payload.debtReminders]
             }
         }
     }

@@ -20,6 +20,7 @@ import Tooltip from "@material-ui/core/Tooltip";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Switch from "@material-ui/core/Switch";
 import DeleteIcon from "@material-ui/icons/Delete";
+import PaymentIcon from "@material-ui/icons/Payment";
 import FilterListIcon from "@material-ui/icons/FilterList";
 
 import Dialog from "@material-ui/core/Dialog";
@@ -29,11 +30,11 @@ import DialogContentText from "@material-ui/core/DialogContentText";
 import DialogTitle from "@material-ui/core/DialogTitle";
 
 import Button from "components/CustomButtons/Button.js";
-import GridItem from "components/Grid/GridItem.js";
 import GridContainer from "components/Grid/GridContainer.js";
+import GridItem from "components/Grid/GridItem.js";
 import CustomInput from "components/CustomInput/CustomInput.js";
 
-import { debtRemindersAction } from "../../redux";
+import { debtRemindersAction, transactionAction } from "../../redux";
 
 const headCells = [
   { id: "_id", numeric: false, disablePadding: true, label: "ID" },
@@ -173,11 +174,15 @@ const useToolbarStyles = makeStyles((theme) => ({
 
 const EnhancedTableToolbar = (props) => {
   const classes = useToolbarStyles();
-  const { numSelected, dispatch, selected, tablename, setOpen } = props;
-
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
+  const {
+    numSelected,
+    dispatch,
+    selected,
+    tablename,
+    setOpen,
+    setOpen1,
+    setInputPayment,
+  } = props;
 
   return (
     <Toolbar
@@ -206,11 +211,39 @@ const EnhancedTableToolbar = (props) => {
       )}
 
       {numSelected > 0 ? (
-        <Tooltip title="Hủy nhắc nợ">
-          <IconButton aria-label="delete" onClick={handleClickOpen}>
-            <DeleteIcon />
-          </IconButton>
-        </Tooltip>
+        <div style={{ display: "flex", flexDirection: "row" }}>
+          <Tooltip title="Hủy nhắc nợ">
+            <IconButton
+              aria-label="delete"
+              onClick={() => {
+                setOpen(true);
+              }}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Thanh toán nhắc nợ">
+            <IconButton
+              aria-label="delete"
+              onClick={async () => {
+                const debtReminders = await dispatch(
+                  debtRemindersAction.detail(selected[0])
+                );
+                if (debtReminders.status && debtReminders.data) {
+                  setInputPayment((prev) => ({
+                    ...prev,
+                    srcAccountNumber: debtReminders.data.srcAccountNumber,
+                    desAccountNumber: debtReminders.data.desAccountNumber,
+                    desAccountName: debtReminders.data.desAccountName,
+                  }));
+                  setOpen1(true);
+                }
+              }}
+            >
+              <PaymentIcon />
+            </IconButton>
+          </Tooltip>
+        </div>
       ) : (
         <Tooltip title="Filter list">
           <IconButton aria-label="filter list">
@@ -314,91 +347,357 @@ const EnhancedTable = (props) => {
     rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage);
 
   const [open, setOpen] = React.useState(false);
+  const [open1, setOpen1] = React.useState(false);
+  const [open2, setOpen2] = React.useState(false);
+  const [open3, setOpen3] = React.useState(false);
 
   const [inputRemoving, setInputRemoving] = useState({
     content: "",
     status: "",
   });
 
+  const [inputPayment, setInputPayment] = useState({
+    srcAccountNumber: "",
+    desAccountNumber: "",
+    desAccountName: "",
+    content: "",
+    status: "",
+    otp: "",
+  });
+
   const handleClose = () => {
-    setInputRemoving((prev) => ({
-      ...prev,
+    setInputRemoving({
       content: "",
       status: "",
-    }));
+    });
     setOpen(false);
   };
 
+  const handleClose1 = () => {
+    setInputPayment({
+      srcAccountNumber: "",
+      desAccountNumber: "",
+      desAccountName: "",
+      content: "",
+      status: "",
+      otp: "",
+    });
+    setSelected([]);
+    setOpen1(false);
+  };
+
+  const handleClose2 = () => {
+    setInputPayment({
+      srcAccountNumber: "",
+      desAccountNumber: "",
+      desAccountName: "",
+      content: "",
+      status: "",
+      otp: "",
+    });
+    setSelected([]);
+    setOpen2(false);
+  };
+
+  const handleClose3 = () => {
+    setInputPayment({
+      srcAccountNumber: "",
+      desAccountNumber: "",
+      desAccountName: "",
+      content: "",
+      status: "",
+      otp: "",
+    });
+    setSelected([]);
+    setOpen3(false);
+  };
+
   const handleRemoveDebtReminders = async () => {
-    if (inputRemoving.content !== "") {
-      const removeDebtReminders = await dispatch(
-        debtRemindersAction.removeCreatedDebtReminders(
-          selected[0],
-          inputRemoving.content
-        )
-      );
-      if (removeDebtReminders.status) {
-        return setOpen(false);
-      }
+    if (inputRemoving.content === "") {
+      return setInputRemoving((prev) => ({
+        ...prev,
+        content: "",
+        status: "Vui lòng nhập đầy đủ thông tin cần thiết!",
+      }));
+    }
+    const removeDebtReminders = await dispatch(
+      debtRemindersAction.removeCreatedDebtReminders(
+        selected[0],
+        inputRemoving.content
+      )
+    );
+    if (removeDebtReminders.status === false) {
       return setInputRemoving((prev) => ({
         ...prev,
         content: "",
         status: removeDebtReminders.msg,
       }));
     }
-    return setInputRemoving((prev) => ({
-      ...prev,
-      content: "",
-      status: "Vui lòng nhập đầy đủ thông tin cần thiết!",
-    }));
+    setOpen(false);
+    setSelected([]);
   };
 
+  const handlePaymentDebtReminders = async () => {
+    if (inputPayment.otp === "") {
+      return setInputRemoving((prev) => ({
+        ...prev,
+        content: "",
+        status: "Vui lòng nhập đầy đủ thông tin cần thiết!",
+      }));
+    }
+    const paymentDebtReminders = await dispatch(
+      debtRemindersAction.paymentCreatedDebtReminders(
+        selected[0],
+        inputPayment.otp,
+        inputPayment.content
+      )
+    );
+    if (paymentDebtReminders.status === false) {
+      return setInputPayment((prev) => ({
+        ...prev,
+        content: "",
+        status: paymentDebtReminders.msg,
+      }));
+    }
+    const data = paymentDebtReminders.data.transaction;
+    const string = `Quý khách đã thanh toán nhắc nợ thành công ${data.money} VND cho ${data.desAccountName} số tài khoản ${data.desAccountNumber}.
+                          Số dư tài khoản ${data.delta} VND lúc ${data.datetime}. Số dư ${data.accountMoney} VND`;
+    setInputPayment((prev) => ({
+      ...prev,
+      content: "",
+      status: string,
+    }));
+    setOpen2(false);
+    setOpen3(true);
+    setSelected([]);
+  };
+
+  const renderRemoveDebtReminder = (
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      aria-labelledby="alert-dialog-title"
+      aria-describedby="alert-dialog-description"
+    >
+      <DialogTitle id="alert-dialog-title">
+        {"Bạn muốn hủy nhắc nợ?"}
+      </DialogTitle>
+      <DialogContent>
+        <DialogContentText id="alert-dialog-description">
+          <GridContainer>
+            <GridItem xs={12} sm={12} md={12}>
+              <CustomInput
+                labelText="Nội dung hủy nhắc nợ"
+                formControlProps={{
+                  fullWidth: true,
+                }}
+                inputProps={{
+                  disabled: false,
+                }}
+                value={inputRemoving.content}
+                onChange={(event) => {
+                  const content = event.target.value;
+                  setInputRemoving((prev) => ({
+                    ...prev,
+                    content,
+                  }));
+                }}
+              />
+              <h6 style={{ color: "red" }}>{inputRemoving.status}</h6>
+            </GridItem>
+          </GridContainer>
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose} color="primary">
+          Đóng
+        </Button>
+        <Button onClick={handleRemoveDebtReminders} color="primary" autoFocus>
+          Xóa nhắc nợ
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+
+  const renderPaymentDebtReminders1 = (
+    <Dialog
+      open={open1}
+      onClose={handleClose1}
+      aria-labelledby="alert-dialog-title"
+      aria-describedby="alert-dialog-description"
+    >
+      <DialogTitle id="alert-dialog-title">{"Thanh toán nhắc nợ"}</DialogTitle>
+      <DialogContent>
+        <DialogContentText id="alert-dialog-description">
+          <GridContainer>
+            <GridItem xs={12} sm={12} md={12}>
+              <CustomInput
+                labelText="Sô tài khoản nguồn"
+                formControlProps={{
+                  fullWidth: true,
+                }}
+                inputProps={{
+                  disabled: true,
+                }}
+                value={inputPayment.srcAccountNumber}
+              />
+              <CustomInput
+                labelText="Số tài khoản đích"
+                formControlProps={{
+                  fullWidth: true,
+                }}
+                inputProps={{
+                  disabled: true,
+                }}
+                value={inputPayment.desAccountNumber}
+              />
+              <CustomInput
+                labelText="Tên tài khoản đích"
+                formControlProps={{
+                  fullWidth: true,
+                }}
+                inputProps={{
+                  disabled: true,
+                }}
+                value={inputPayment.desAccountName}
+              />
+              <CustomInput
+                labelText="Nội dung thanh toán nhắc nợ"
+                formControlProps={{
+                  fullWidth: true,
+                }}
+                inputProps={{
+                  disabled: false,
+                }}
+                value={inputPayment.content}
+                onChange={(event) => {
+                  const content = event.target.value;
+                  setInputPayment((prev) => ({
+                    ...prev,
+                    content,
+                  }));
+                }}
+              />
+              <h6 style={{ color: "red" }}>{inputPayment.status}</h6>
+            </GridItem>
+          </GridContainer>
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose1} color="primary">
+          Đóng
+        </Button>
+        <Button
+          onClick={async () => {
+            if (inputPayment.content === "") {
+              return setInputPayment((prev) => ({
+                ...prev,
+                status: "Vui lòng nhập nội dung thanh toán",
+              }));
+            }
+            const otp = await dispatch(transactionAction.getOTP());
+            if (otp.status === false) {
+              return setInputPayment((prev) => ({
+                ...prev,
+                status: otp.msg,
+              }));
+            }
+            setInputPayment((prev) => ({
+              ...prev,
+              status: "",
+            }));
+            setOpen1(false);
+            setOpen2(true);
+          }}
+          color="primary"
+          autoFocus
+        >
+          Tiếp tục
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+
+  const renderPaymentDebtReminders2 = (
+    <Dialog
+      open={open2}
+      onClose={handleClose2}
+      aria-labelledby="alert-dialog-title"
+      aria-describedby="alert-dialog-description"
+    >
+      <DialogTitle id="alert-dialog-title">{"Thanh toán nhắc nợ"}</DialogTitle>
+      <DialogContent>
+        <DialogContentText id="alert-dialog-description">
+          <GridContainer>
+            <GridItem xs={12} sm={12} md={12}>
+              <CustomInput
+                labelText="OTP được gửi đến email"
+                formControlProps={{
+                  fullWidth: true,
+                }}
+                inputProps={{
+                  disabled: false,
+                }}
+                value={inputPayment.otp}
+                onChange={(event) => {
+                  const otp = event.target.value;
+                  setInputPayment((prev) => ({
+                    ...prev,
+                    otp,
+                  }));
+                }}
+              />
+              <h6 style={{ color: "red" }}>{inputPayment.status}</h6>
+            </GridItem>
+          </GridContainer>
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose2} color="primary">
+          Đóng
+        </Button>
+        <Button onClick={handlePaymentDebtReminders} color="primary" autoFocus>
+          Thanh toán nhắc nợ
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+
+  const renderPaymentDebtReminders3 = (
+    <Dialog
+      open={open3}
+      onClose={handleClose3}
+      aria-labelledby="alert-dialog-title"
+      aria-describedby="alert-dialog-description"
+    >
+      <DialogTitle id="alert-dialog-title">{"Thanh toán nhắc nợ"}</DialogTitle>
+      <DialogContent>
+        <DialogContentText id="alert-dialog-description">
+          <GridContainer>
+            <GridItem xs={12} sm={12} md={12}>
+              <h6 style={{ color: "green" }}>{inputPayment.status}</h6>
+            </GridItem>
+          </GridContainer>
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose3} color="primary">
+          Đóng
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+
   return (
-    <div className={classes.root}>
-      <Dialog
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">
-          {"Bạn muốn hủy nhắc nợ?"}
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            <GridContainer>
-              <GridItem xs={12} sm={12} md={12}>
-                <CustomInput
-                  labelText="Nội dung hủy nhắc nợ"
-                  formControlProps={{
-                    fullWidth: true,
-                  }}
-                  inputProps={{
-                    disabled: false,
-                  }}
-                  value={inputRemoving.content}
-                  onChange={(event) => {
-                    const content = event.target.value;
-                    setInputRemoving((prev) => ({
-                      ...prev,
-                      content,
-                    }));
-                  }}
-                />
-                <h6 style={{ color: "red" }}>{inputRemoving.status}</h6>
-              </GridItem>
-            </GridContainer>
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} color="primary">
-            Trở lại
-          </Button>
-          <Button onClick={handleRemoveDebtReminders} color="primary" autoFocus>
-            Xóa nhắc nợ
-          </Button>
-        </DialogActions>
-      </Dialog>
+    <GridContainer className={classes.root}>
+      {/* Hủy nhắc nợ */}
+      {renderRemoveDebtReminder}
+
+      {/* Thanh toán nhắc nợ */}
+      {renderPaymentDebtReminders1}
+      {renderPaymentDebtReminders2}
+      {renderPaymentDebtReminders3}
+
       <Paper className={classes.paper}>
         <EnhancedTableToolbar
           tablename={tablename}
@@ -406,6 +705,8 @@ const EnhancedTable = (props) => {
           dispatch={dispatch}
           selected={selected}
           setOpen={setOpen}
+          setOpen1={setOpen1}
+          setInputPayment={setInputPayment}
         />
         <TableContainer>
           <Table
@@ -487,7 +788,7 @@ const EnhancedTable = (props) => {
         control={<Switch checked={dense} onChange={handleChangeDense} />}
         label="Dense padding"
       />
-    </div>
+    </GridContainer>
   );
 };
 
