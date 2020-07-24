@@ -118,10 +118,16 @@ const DebtReminders = ({
   };
 
   // Xử lý real-time cho bên được tạo nhắc nợ (khi bên tạo nhắc nợ tạo 1 nhắc nợ thì bên được nhắc lập tức thêm 1 dòng vào nhắc nợ chưa thanh toán)
-  const [sseCreatedDebtReminders, setSseCreatedDebtReminders] = useState(null);
+  const [sseDebtRemindersAdded, setSseDebtRemindersAdded] = useState({
+    data: null,
+    isCalled: false,
+  });
 
   const sse = (url, event) => {
-    setSseCreatedDebtReminders(null);
+    setSseDebtRemindersAdded((prev) => ({
+      ...prev,
+      data: null,
+    }));
     if (typeof EventSource === "undefined") {
       console.log("not support");
       return;
@@ -136,37 +142,54 @@ const DebtReminders = ({
     src.addEventListener(
       event,
       function (e) {
-        setSseCreatedDebtReminders(JSON.parse(e.data));
+        setSseDebtRemindersAdded((prev) => ({
+          ...prev,
+          data: JSON.parse(e.data),
+        }));
       },
       false
     );
   };
 
   useEffect(() => {
-    const url = `${process.env.REACT_APP_BASE_BACKEND_URL}debt-reminders/debt-reminders-add-event`;
-    sse(url, "DEBT_REMINDERS_ADDED");
-    if (sseCreatedDebtReminders) {
+    if (!sseDebtRemindersAdded.isCalled) {
+      const url = `${process.env.REACT_APP_BASE_BACKEND_URL}debt-reminders/debt-reminders-add-event`;
+      sse(url, "DEBT_REMINDERS_ADDED");
+
+      setSseDebtRemindersAdded((prev) => ({
+        ...prev,
+        isCalled: true,
+      }));
+    }
+  }, [sseDebtRemindersAdded.isCalled]);
+
+  useEffect(() => {
+    if (sseDebtRemindersAdded.data) {
       const _IDs = table.unpaidCreatedDebtReminders.map((i) => i._id);
-      if (!_IDs.includes(sseCreatedDebtReminders._id)) {
+      if (!_IDs.includes(sseDebtRemindersAdded.data._id)) {
         setTable((prev) => ({
           ...prev,
           unpaidCreatedDebtReminders: [
             ...table.unpaidCreatedDebtReminders,
-            sseCreatedDebtReminders,
+            sseDebtRemindersAdded.data,
           ],
         }));
       }
     }
-  }, [sseCreatedDebtReminders]);
+  }, [sseDebtRemindersAdded.data]);
+
 
   // Xử lý real-time khi bên tạo hủy nhắc nợ (khi bên tạo nhắc nợ hủy 1 nhắc nợ thì bên được nhắc lập tức xóa 1 dòng ở nhắc nợ chưa thanh toán)
-  const [
-    sseRemoveCreatedDebtReminders,
-    setSseRemoveCreatedDebtReminders,
-  ] = useState(null);
+  const [sseDebtRemindersRemoved, setSseDebtRemindersRemoved] = useState({
+    data: null,
+    isCalled: false,
+  });
 
   const sse1 = (url, event) => {
-    setSseRemoveCreatedDebtReminders(null);
+    setSseDebtRemindersRemoved((prev) => ({
+      ...prev,
+      data: null,
+    }));
     if (typeof EventSource === "undefined") {
       console.log("not support");
       return;
@@ -181,19 +204,32 @@ const DebtReminders = ({
     src.addEventListener(
       event,
       function (e) {
-        setSseRemoveCreatedDebtReminders(JSON.parse(e.data));
+        setSseDebtRemindersRemoved((prev) => ({
+          ...prev,
+          data: JSON.parse(e.data),
+        }));
       },
       false
     );
   };
 
   useEffect(() => {
-    const url = `${process.env.REACT_APP_BASE_BACKEND_URL}debt-reminders/debt-reminders-remove-event`;
-    sse1(url, "DEBT_REMINDERS_REMOVED");
-    if (sseRemoveCreatedDebtReminders) {
+    if (!sseDebtRemindersRemoved.isCalled) {
+      const url = `${process.env.REACT_APP_BASE_BACKEND_URL}debt-reminders/debt-reminders-remove-event`;
+      sse1(url, "DEBT_REMINDERS_REMOVED");
+
+      setSseDebtRemindersRemoved((prev) => ({
+        ...prev,
+        isCalled: true,
+      }));
+    }
+  }, [sseDebtRemindersRemoved.isCalled]);
+
+  useEffect(() => {
+    if (sseDebtRemindersRemoved.data) {
       const data = [];
       table.unpaidCreatedDebtReminders.map((i) => {
-        if (sseRemoveCreatedDebtReminders._id !== i._id) {
+        if (sseDebtRemindersRemoved.data._id !== i._id) {
           data.push(i);
         }
       });
@@ -202,16 +238,20 @@ const DebtReminders = ({
         unpaidCreatedDebtReminders: data,
       }));
     }
-  }, [sseRemoveCreatedDebtReminders]);
+  }, [sseDebtRemindersRemoved.data]);
+
 
   // Xử lý real-time khi bên nợ hủy nhắc nợ (khi bên nợ hủy 1 nhắc nợ thì bên tạo lập tức cập nhật lại danh sách nhắc nợ đã tạo)
   const [
-    sseRemoveCreatingDebtReminders,
-    setSseRemoveCreatingDebtReminders,
-  ] = useState(null);
+    sseCreatedDebtRemindersRemoved,
+    setSseCreatedDebtRemindersRemoved,
+  ] = useState({ data: null, isCalled: false });
 
   const sse2 = (url, event) => {
-    setSseRemoveCreatingDebtReminders(null);
+    setSseCreatedDebtRemindersRemoved((prev) => ({
+      ...prev,
+      data: null,
+    }));
     if (typeof EventSource === "undefined") {
       console.log("not support");
       return;
@@ -226,20 +266,33 @@ const DebtReminders = ({
     src.addEventListener(
       event,
       function (e) {
-        setSseRemoveCreatingDebtReminders(JSON.parse(e.data));
+        setSseCreatedDebtRemindersRemoved((prev) => ({
+          ...prev,
+          data: JSON.parse(e.data),
+        }));
       },
       false
     );
   };
 
   useEffect(() => {
-    const url = `${process.env.REACT_APP_BASE_BACKEND_URL}debt-reminders/created-debt-reminders-remove-event`;
-    sse2(url, "CREATED_DEBT_REMINDERS_REMOVED");
-    if (sseRemoveCreatingDebtReminders) {
+    if (!sseCreatedDebtRemindersRemoved.isCalled) {
+      const url = `${process.env.REACT_APP_BASE_BACKEND_URL}debt-reminders/created-debt-reminders-remove-event`;
+      sse2(url, "CREATED_DEBT_REMINDERS_REMOVED");
+
+      setSseCreatedDebtRemindersRemoved((prev) => ({
+        ...prev,
+        isCalled: true,
+      }));
+    }
+  }, [sseCreatedDebtRemindersRemoved.isCalled]);
+
+  useEffect(() => {
+    if (sseCreatedDebtRemindersRemoved.data) {
       let data = [];
       table.creatingDebtReminders.map((i) => {
-        if (sseRemoveCreatingDebtReminders._id !== i._id) {
-          data.push(sseRemoveCreatingDebtReminders);
+        if (sseCreatedDebtRemindersRemoved.data._id === i._id) {
+          data.push(sseCreatedDebtRemindersRemoved.data);
         } else {
           data.push(i);
         }
@@ -249,11 +302,20 @@ const DebtReminders = ({
         creatingDebtReminders: data,
       }));
     }
-  }, [sseRemoveCreatingDebtReminders]);
+  }, [sseCreatedDebtRemindersRemoved.data]);
+
 
   // Xử lý real-time khi bên nợ thanh toán nhắc nợ (khi bên nợ thanh toán 1 nhắc nợ thì bên tạo lập tức cập nhật lại danh sách nhắc nợ đã tạo)
+  const [
+    sseCreatedDebtRemindersPaymented,
+    setSseCreatedDebtRemindersPaymented,
+  ] = useState({ data: null, isCalled: false });
+
   const sse3 = (url, event) => {
-    setSseRemoveCreatingDebtReminders(null);
+    setSseCreatedDebtRemindersPaymented((prev) => ({
+      ...prev,
+      data: null,
+    }));
     if (typeof EventSource === "undefined") {
       console.log("not support");
       return;
@@ -268,20 +330,33 @@ const DebtReminders = ({
     src.addEventListener(
       event,
       function (e) {
-        setSseRemoveCreatingDebtReminders(JSON.parse(e.data));
+        setSseCreatedDebtRemindersPaymented((prev) => ({
+          ...prev,
+          data: JSON.parse(e.data),
+        }));
       },
       false
     );
   };
 
   useEffect(() => {
-    const url = `${process.env.REACT_APP_BASE_BACKEND_URL}debt-reminders/created-debt-reminders-payment-event`;
-    sse3(url, "CREATED_DEBT_REMINDERS_PAYMENTED");
-    if (sseRemoveCreatingDebtReminders) {
+    if (!sseCreatedDebtRemindersPaymented.isCalled) {
+      const url = `${process.env.REACT_APP_BASE_BACKEND_URL}debt-reminders/created-debt-reminders-payment-event`;
+      sse3(url, "CREATED_DEBT_REMINDERS_PAYMENTED");
+
+      setSseCreatedDebtRemindersPaymented((prev) => ({
+        ...prev,
+        isCalled: true,
+      }));
+    }
+  }, [sseCreatedDebtRemindersPaymented.isCalled]);
+
+  useEffect(() => {
+    if (sseCreatedDebtRemindersPaymented.data) {
       let data = [];
       table.creatingDebtReminders.map((i) => {
-        if (sseRemoveCreatingDebtReminders._id === i._id) {
-          data.push(sseRemoveCreatingDebtReminders);
+        if (sseCreatedDebtRemindersPaymented.data._id === i._id) {
+          data.push(sseCreatedDebtRemindersPaymented.data);
         } else {
           data.push(i);
         }
@@ -291,7 +366,8 @@ const DebtReminders = ({
         creatingDebtReminders: data,
       }));
     }
-  }, [sseRemoveCreatingDebtReminders]);
+  }, [sseCreatedDebtRemindersPaymented.data]);
+
 
   // Set data cho table
   useEffect(() => {

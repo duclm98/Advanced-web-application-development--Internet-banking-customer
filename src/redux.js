@@ -75,13 +75,11 @@ export const accountAction = {
         });
     },
     getAccount: (accountNumberFromBody) => async (dispatch) => {
-        const accountNumber = accountNumberFromBody ?
-            accountNumberFromBody :
-            "0000000000000";
-        instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
-            localStorageVariable.storeAccessToken
-        );
+        const accountNumber = accountNumberFromBody ? accountNumberFromBody : "0000000000000";
         try {
+            instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
+                localStorageVariable.storeAccessToken
+            );
             const {
                 data
             } = await instance.get(
@@ -191,7 +189,7 @@ export const transactionAction = {
             }
 
         } catch (error) {
-            let msg = 'Có lỗi trong quá trình tạo nhắc nợ!';
+            let msg = 'Có lỗi trong quá trình gửi OTP qua email!';
             if (error.response) {
                 msg = error.response.data;
             }
@@ -405,6 +403,7 @@ const initialState = {
     accessToken: localStorage.getItem(localStorageVariable.storeAccessToken),
     refreshToken: localStorage.getItem(localStorageVariable.storeRefreshToken),
     account: localStorage.getItem(localStorageVariable.storeAccount),
+    desAccount:null,
     receivers: [],
     changeReceivers: true,
     payment_savingAccounts: [],
@@ -532,7 +531,7 @@ export default (state = initialState, action) => {
         }
     } else if (action.type === "REMOVE_CREATED_DEBT_REMINDERS_SUCCESS") {
         let data = [];
-        state.unpaidCreatedDebtReminders.list.map(i => {
+        state.unpaidCreatedDebtReminders.list.forEach(i => {
             if (i._id !== action.payload._id) {
                 data.push(i);
             }
@@ -545,7 +544,7 @@ export default (state = initialState, action) => {
         }
     } else if (action.type === "PAYMENT_CREATED_DEBT_REMINDERS_SUCCESS") {
         let data = [];
-        state.unpaidCreatedDebtReminders.list.map(i => {
+        state.unpaidCreatedDebtReminders.list.forEach(i => {
             if (i._id !== action.payload.debtReminders._id) {
                 data.push(i)
             }
