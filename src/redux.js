@@ -399,11 +399,56 @@ export const debtRemindersAction = {
     },
 };
 
+export const notificationAction = {
+    calledSSENewNotification: () => async dispatch => {
+        dispatch({
+            type: "CALLED_SSE_NEW_NOTIFICATION",
+            payload: true
+        });
+    },
+    getNotification: () => async dispatch => {
+        instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
+            localStorageVariable.storeAccessToken
+        );
+        try {
+            const {
+                data
+            } = await instance.get(`notifications`);
+            dispatch({
+                type: "GET_NOTIFICATION",
+                payload: data
+            })
+            return {
+                status: true,
+                data
+            }
+        } catch (error) {}
+    },
+    readNotification: (_id) => async dispatch => {
+        instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
+            localStorageVariable.storeAccessToken
+        );
+        try {
+            const {
+                data
+            } = await instance.post(`notifications/read/${_id}`);
+            dispatch({
+                type: "READ_NOTIFICATION_SUCCESS",
+                payload: data
+            })
+            return {
+                status: true,
+                data
+            }
+        } catch (error) {}
+    }
+}
+
 const initialState = {
     accessToken: localStorage.getItem(localStorageVariable.storeAccessToken),
     refreshToken: localStorage.getItem(localStorageVariable.storeRefreshToken),
     account: localStorage.getItem(localStorageVariable.storeAccount),
-    desAccount:null,
+    desAccount: null,
     receivers: [],
     changeReceivers: true,
     payment_savingAccounts: [],
@@ -418,32 +463,30 @@ const initialState = {
     paidCreatedDebtReminders: {
         list: [],
         changeList: true,
+    },
+    isCalledSSENewNotification: false,
+    notification: {
+        amountNewNotifications: 0,
+        data: []
     }
 };
 
 export default (state = initialState, action) => {
     if (action.type === "LOGIN_SUCCESS") {
-        state.accessToken = action.payload.accessToken;
-        state.refreshToken = action.payload.refreshToken;
-        state.account = action.payload.account;
         return {
-            changeReceivers: true,
+            ...state,
             accessToken: action.payload.accessToken,
             refreshToken: action.payload.refreshToken,
-            account: action.payload.account,
-            debtReminders: {
-                changeList: true,
-            },
-            createdDebtReminders: {
-                changeList: true,
-            }
+            account: action.payload.account
         };
     } else if (action.type === "LOGIN_FAILED") {
         return {
+            ...state,
             msg: action.payload.msg,
         };
     } else if (action.type === "LOGOUT") {
         return {
+            ...state,
             accessToken: null,
             refreshToken: null,
             account: null,
@@ -556,6 +599,38 @@ export default (state = initialState, action) => {
             },
             paidCreatedDebtReminders: {
                 list: [...state.paidCreatedDebtReminders.list, action.payload.debtReminders]
+            }
+        }
+    } else if (action.type === 'CALLED_SSE_NEW_NOTIFICATION') {
+        return {
+            ...state,
+            isCalledSSENewNotification: action.payload
+        }
+    } else if (action.type === 'GET_NOTIFICATION') {
+        return {
+            ...state,
+            notification: {
+                amountNewNotifications: action.payload.amountNewNotifications,
+                data: action.payload.data
+            }
+        }
+    } else if (action.type === 'READ_NOTIFICATION_SUCCESS') {
+        let amountNewNotifications = state.notification.amountNewNotifications;
+        let data = [];
+        state.notification.data.map(i => {
+            if (i._id === action.payload._id) {
+                amountNewNotifications--;
+                data.push(action.payload);
+            } else {
+                data.push(i);
+            }
+        });
+
+        return {
+            ...state,
+            notification: {
+                amountNewNotifications: amountNewNotifications,
+                data: data
             }
         }
     }

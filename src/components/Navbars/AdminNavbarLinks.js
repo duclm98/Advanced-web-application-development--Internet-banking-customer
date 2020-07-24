@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
 import classNames from "classnames";
 
@@ -22,19 +22,25 @@ import styles from "assets/jss/material-dashboard-react/components/headerLinksSt
 
 import * as localStorageVariable from "../../variables/LocalStorage";
 
-import { accountAction } from "../../redux";
+import { accountAction, notificationAction } from "../../redux";
 
 const useStyles = makeStyles(styles);
 
-const AdminNavbarLinks = ({ dispatch }) => {
+const AdminNavbarLinks = ({
+  dispatch,
+  isCalledSSENewNotification,
+  notificationFromState,
+}) => {
   const classes = useStyles();
 
-  const account = JSON.parse(localStorage.getItem(localStorageVariable.storeAccount));
+  const account = JSON.parse(
+    localStorage.getItem(localStorageVariable.storeAccount)
+  );
 
   const [openNotification, setOpenNotification] = React.useState(null);
   const [openProfile, setOpenProfile] = React.useState(null);
 
-  const handleClickNotification = event => {
+  const handleClickNotification = (event) => {
     if (openNotification && openNotification.contains(event.target)) {
       setOpenNotification(null);
     } else {
@@ -60,6 +66,83 @@ const AdminNavbarLinks = ({ dispatch }) => {
     dispatch(accountAction.logout());
   };
 
+  const [notification, setNotification] = useState(notificationFromState);
+
+  // Xử lý real-time khi có thông báo mới
+  const [sseNotification, setSseNotification] = useState(null);
+
+  const sse = (url, event) => {
+    setSseNotification(null);
+    if (typeof EventSource === "undefined") {
+      console.log("not support");
+      return;
+    }
+
+    const src = new EventSource(url);
+
+    src.onerror = function (e) {
+      console.log("error: " + e);
+    };
+
+    src.addEventListener(
+      event,
+      function (e) {
+        setSseNotification(JSON.parse(e.data));
+      },
+      false
+    );
+  };
+
+  useEffect(() => {
+    if (!isCalledSSENewNotification) {
+      const url = `${process.env.REACT_APP_BASE_BACKEND_URL}notifications/new-notification-event`;
+      sse(url, "NEW_NOTIFICATION");
+
+      dispatch(notificationAction.calledSSENewNotification());
+      dispatch(notificationAction.getNotification());
+    }
+  }, [isCalledSSENewNotification]);
+
+  useEffect(() => {
+    if (sseNotification && sseNotification.status) {
+      dispatch(notificationAction.getNotification());
+    }
+  }, [sseNotification]);
+
+  useEffect(() => {
+    setNotification({
+      amountNewNotifications: notificationFromState.amountNewNotifications,
+      data: notificationFromState.data,
+    });
+  }, [notificationFromState]);
+
+  const handleReadNotification = async (_id) => {
+    dispatch(notificationAction.readNotification(_id));
+    setOpenNotification(null);
+  };
+
+  const renderNotification = () => {
+    return notification.data.map((i) => {
+      let backgroundColor = "#F8F8FF";
+      if (i.isRead === false) {
+        backgroundColor = "#9FB6CD";
+      }
+      const style = { backgroundColor: backgroundColor };
+      return (
+        <MenuItem
+          style={style}
+          onClick={() => {
+            handleReadNotification(i._id);
+          }}
+          className={classes.dropdownItem}
+        >
+          {i.content}
+          <p>{i.datetime}</p>
+        </MenuItem>
+      );
+    });
+  };
+
   return (
     <div>
       <div className={classes.manager}>
@@ -73,7 +156,11 @@ const AdminNavbarLinks = ({ dispatch }) => {
           className={classes.buttonLink}
         >
           <Notifications className={classes.icons} />
-          <span className={classes.notifications}>5</span>
+          {notification.amountNewNotifications !== 0 ? (
+            <span className={classes.notifications}>
+              {notification.amountNewNotifications}
+            </span>
+          ) : null}
           <Hidden mdUp implementation="css">
             <p onClick={handleCloseNotification} className={classes.linkText}>
               Notification
@@ -102,38 +189,7 @@ const AdminNavbarLinks = ({ dispatch }) => {
             >
               <Paper>
                 <ClickAwayListener onClickAway={handleCloseNotification}>
-                  <MenuList role="menu">
-                    <MenuItem
-                      onClick={handleCloseNotification}
-                      className={classes.dropdownItem}
-                    >
-                      Mike John responded to your email
-                    </MenuItem>
-                    <MenuItem
-                      onClick={handleCloseNotification}
-                      className={classes.dropdownItem}
-                    >
-                      You have 5 new tasks
-                    </MenuItem>
-                    <MenuItem
-                      onClick={handleCloseNotification}
-                      className={classes.dropdownItem}
-                    >
-                      You{"'"}re now friend with Andrew
-                    </MenuItem>
-                    <MenuItem
-                      onClick={handleCloseNotification}
-                      className={classes.dropdownItem}
-                    >
-                      Another Notification
-                    </MenuItem>
-                    <MenuItem
-                      onClick={handleCloseNotification}
-                      className={classes.dropdownItem}
-                    >
-                      Another One
-                    </MenuItem>
-                  </MenuList>
+                  <MenuList role="menu">{renderNotification()}</MenuList>
                 </ClickAwayListener>
               </Paper>
             </Grow>
@@ -208,4 +264,11 @@ const AdminNavbarLinks = ({ dispatch }) => {
   );
 };
 
-export default connect()(AdminNavbarLinks);
+const mapStateToProps = (state) => {
+  return {
+    isCalledSSENewNotification: state.isCalledSSENewNotification,
+    notificationFromState: state.notification,
+  };
+};
+
+export default connect(mapStateToProps)(AdminNavbarLinks);
