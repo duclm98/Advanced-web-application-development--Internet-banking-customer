@@ -22,13 +22,16 @@ import Switch from '@material-ui/core/Switch';
 import DeleteIcon from '@material-ui/icons/Delete';
 import FilterListIcon from '@material-ui/icons/FilterList';
 
-import { accountAction } from '../../redux';
-
 const headCells = [
   { id: '_id', numeric: false, disablePadding: true, label: 'ID' },
-  { id: 'accountNumber', numeric: true, disablePadding: false, label: 'Số tài khoản' },
-  { id: 'accountName', numeric: true, disablePadding: false, label: 'Tên tài khoản' },
-  { id: 'accountNameReminiscent', numeric: true, disablePadding: false, label: 'Tên gợi nhớ' },
+  { id: 'datetime', numeric: false, disablePadding: true, label: 'Ngày giờ' },
+  { id: 'type', numeric: false, disablePadding: true, label: 'Loại' },
+  { id: 'srcAccountNumber', numeric: false, disablePadding: true, label: 'Số tài khoản nguồn' },
+  { id: 'srcAccountName', numeric: false, disablePadding: true, label: 'Tên tài khoản nguồn' },
+  { id: 'desAccountNumber', numeric: false, disablePadding: true, label: 'Số tài khoản đích' },
+  { id: 'desAccountName', numeric: false, disablePadding: true, label: 'Tên tài khoản đích' },
+  { id: 'money', numeric: true, disablePadding: false, label: 'Số tiền' },
+  { id: 'content', numeric: true, disablePadding: false, label: 'Nội dung' },
 ];
 
 function descendingComparator(a, b, orderBy) {
@@ -132,7 +135,7 @@ const useToolbarStyles = makeStyles((theme) => ({
 
 const EnhancedTableToolbar = (props) => {
   const classes = useToolbarStyles();
-  const { numSelected, dispatch, selected } = props;
+  const { numSelected, tableName } = props;
 
   return (
     <Toolbar
@@ -140,29 +143,9 @@ const EnhancedTableToolbar = (props) => {
         [classes.highlight]: numSelected > 0,
       })}
     >
-      {numSelected > 0 ? (
-        <Typography className={classes.title} color="inherit" variant="subtitle1" component="div">
-          {numSelected} selected
+      <Typography className={classes.title} variant="h6" id="tableTitle" component="div">
+          {tableName}
         </Typography>
-      ) : (
-        <Typography className={classes.title} variant="h6" id="tableTitle" component="div">
-          Danh bạ thụ hưởng
-        </Typography>
-      )}
-
-      {numSelected > 0 ? (
-        <Tooltip title="Xóa">
-          <IconButton aria-label="delete" onClick={()=>{dispatch(accountAction.deleteReceivers(selected))}}>
-            <DeleteIcon />
-          </IconButton>
-        </Tooltip>
-      ) : (
-        <Tooltip title="Filter list">
-          <IconButton aria-label="filter list">
-            <FilterListIcon />
-          </IconButton>
-        </Tooltip>
-      )}
     </Toolbar>
   );
 };
@@ -196,7 +179,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const EnhancedTable = (props) => {
-  const { rows, dispatch } = props;
+  const { rows, tableName } = props;
   const classes = useStyles();
   const [order, setOrder] = React.useState('asc');
   const [orderBy, setOrderBy] = React.useState();
@@ -260,7 +243,7 @@ const EnhancedTable = (props) => {
   return (
     <div className={classes.root}>
       <Paper className={classes.paper}>
-        <EnhancedTableToolbar numSelected={selected.length} dispatch={dispatch} selected={selected} />
+        <EnhancedTableToolbar numSelected={selected.length} tableName={tableName} />
         <TableContainer>
           <Table
             className={classes.table}
@@ -303,9 +286,14 @@ const EnhancedTable = (props) => {
                       <TableCell component="th" id={labelId} scope="row" padding="none">
                         {row._id}
                       </TableCell>
-                      <TableCell align="right">{row.accountNumber}</TableCell>
-                      <TableCell align="right">{row.accountName}</TableCell>
-                      <TableCell align="right">{row.accountNameReminiscent}</TableCell>
+                      <TableCell align="right">{row.datetime}</TableCell>
+                      <TableCell align="right">{row.type}</TableCell>
+                      <TableCell align="right">{row.srcAccountNumber}</TableCell>
+                      <TableCell align="right">{row.srcAccountName}</TableCell>
+                      <TableCell align="right">{row.desAccountNumber}</TableCell>
+                      <TableCell align="right">{row.desAccountName}</TableCell>
+                      <TableCell align="right">{row.money}</TableCell>
+                      <TableCell align="right">{row.content}</TableCell>
                     </TableRow>
                   );
                 })}

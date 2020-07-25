@@ -21,12 +21,14 @@ import LibraryBooks from "@material-ui/icons/LibraryBooks";
 import ListAltOutlined from '@material-ui/icons/ListAltOutlined';
 import NotificationImportantOutlined from '@material-ui/icons/NotificationImportantOutlined';
 import SettingsApplicationsOutlined from '@material-ui/icons/SettingsApplicationsOutlined';
+import HistoryOutlined from '@material-ui/icons/HistoryOutlined';
 
 // core components/views for Admin layout
 import AccountsListPage from 'views/AccountsList/AccountsList.js';
 import ReceiversListPage from 'views/ReceiversList/ReceiversList.js';
 import TransactionPage from 'views/Transaction/Transaction.js';
 import DebtRemindersPage from 'views/DebtReminders/DebtReminders.js';
+import TransactionHistoryPage from 'views/TransactionHistory/TransactionHistory.js';
 import SettingPage from 'views/Setting/Setting.js';
 
 const dashboardRoutes = [
@@ -53,6 +55,12 @@ const dashboardRoutes = [
     name: "Quản lý nhắc nợ",
     icon: NotificationImportantOutlined,
     component: DebtRemindersPage,
+  },
+  {
+    path: "/history-transactions",
+    name: "Lịch sử giao dịch",
+    icon: HistoryOutlined,
+    component: TransactionHistoryPage,
   },
   {
     path: "/setting",

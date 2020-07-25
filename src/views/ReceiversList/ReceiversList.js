@@ -33,21 +33,21 @@ const ReceiversList = ({
   const [status, setStatus] = useState("");
   const [submit, setSubmit] = useState(false);
 
-  if (changeReceiversFromState === true) {
-    dispatch(accountAction.getReceivers());
-  }
-
   useEffect(() => {
-    dispatch(accountAction.getAccount(accountNumber));
-  }, [accountNumber]);
-
-  useEffect(() => {
-    if (desAccountNameFromState) {
-      setAccountName(desAccountNameFromState);
-    } else {
-      setAccountName("");
+    if (changeReceiversFromState === true) {
+      dispatch(accountAction.getReceivers());
     }
-  }, [desAccountNameFromState]);
+  }, [changeReceiversFromState]);
+
+  useEffect(() => {
+    const setDesAccountNameFunction = async () => {
+      const account = await dispatch(accountAction.getAccount(accountNumber));
+      if (account.status) {
+        setAccountName(account.data.accountName);
+      }
+    };
+    setDesAccountNameFunction();
+  }, [accountNumber]);
 
   const handleAddReceiver = () => {
     if (accountNumber === "" || accountName === "") {
@@ -82,9 +82,7 @@ const ReceiversList = ({
         <GridItem xs={12} sm={12} md={12}>
           <Card>
             <CardHeader color="warning">
-              <h4 className={classes.cardTitleWhite}>
-                Danh bạ thụ hưởng
-              </h4>
+              <h4 className={classes.cardTitleWhite}>Danh bạ thụ hưởng</h4>
             </CardHeader>
             <CardBody>
               <GridContainer>
@@ -133,7 +131,7 @@ const ReceiversList = ({
                   </Button>
                 </GridItem>
                 <GridItem xs={12} sm={12} md={9}>
-                  <Table rows={receiversFromState}></Table>
+                  <Table rows={receiversFromState || []}></Table>
                 </GridItem>
               </GridContainer>
             </CardBody>
