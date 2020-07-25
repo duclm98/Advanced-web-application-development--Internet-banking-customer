@@ -85,10 +85,6 @@ export const accountAction = {
             } = await instance.get(
                 `accounts/accountNumber/${accountNumber}`
             );
-            dispatch({
-                type: "GET_ACCOUNT",
-                payload: data,
-            });
             return {
                 status: true,
                 data
@@ -212,8 +208,60 @@ export const transactionAction = {
             } = await instance.get(
                 `transactions/interbank/accountNumber/${accountNumber}`
             );
+            return {
+                status: true,
+                data
+            }
+        } catch (error) {
+            return {
+                status: false
+            }
+        }
+    },
+    getMoneyReceivingTransaction: () => async dispatch => {
+        instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
+            localStorageVariable.storeAccessToken
+        );
+        try {
+            const {
+                data
+            } = await instance.get(
+                `transactions/money-receiving`
+            );
             dispatch({
-                type: "GET_ACCOUNT",
+                type: "GET_MONEY_RECEIVING_TRANSACTION",
+                payload: data,
+            });
+        } catch (error) {}
+    },
+    getMoneySendingTransaction: () => async dispatch => {
+        instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
+            localStorageVariable.storeAccessToken
+        );
+        try {
+            const {
+                data
+            } = await instance.get(
+                `transactions/money-sending`
+            );
+            dispatch({
+                type: "GET_MONEY_SENDING_TRANSACTION",
+                payload: data,
+            });
+        } catch (error) {}
+    },
+    getDebtRemindersTransaction: () => async dispatch => {
+        instance.defaults.headers.common["x_authorization"] = localStorage.getItem(
+            localStorageVariable.storeAccessToken
+        );
+        try {
+            const {
+                data
+            } = await instance.get(
+                `transactions/payment-debt-reminders`
+            );
+            dispatch({
+                type: "GET_DEBT_REMINDERS_TRANSACTION",
                 payload: data,
             });
         } catch (error) {}
@@ -468,10 +516,16 @@ const initialState = {
     notification: {
         amountNewNotifications: 0,
         data: []
+    },
+    transactionHistory: {
+        moneyReceivingTransactions: [],
+        moneySendingTransactions: [],
+        debtRemindersTransactions: []
     }
 };
 
 export default (state = initialState, action) => {
+    // Reducer cho account action
     if (action.type === "LOGIN_SUCCESS") {
         return {
             ...state,
@@ -490,11 +544,6 @@ export default (state = initialState, action) => {
             accessToken: null,
             refreshToken: null,
             account: null,
-        };
-    } else if (action.type === "GET_ACCOUNT") {
-        return {
-            ...state,
-            desAccount: action.payload,
         };
     } else if (action.type === "GET_RECEIVERS") {
         return {
@@ -526,7 +575,35 @@ export default (state = initialState, action) => {
             ...state,
             payment_savingAccounts,
         };
-    } else if (action.type === "GET_CREATING_DEBT_REMINDERS") {
+    }
+
+    // Reducer cho transaction action
+    else if (action.type === 'GET_MONEY_RECEIVING_TRANSACTION') {
+        console.log(action.payload.data)
+        return {
+            ...state,
+            transactionHistory: {
+                moneyReceivingTransactions: action.payload
+            }
+        }
+    } else if (action.type === 'GET_MONEY_SENDING_TRANSACTION') {
+        return {
+            ...state,
+            transactionHistory: {
+                moneySendingTransactions: action.payload
+            }
+        }
+    } else if (action.type === 'GET_DEBT_REMINDERS_TRANSACTION') {
+        return {
+            ...state,
+            transactionHistory: {
+                debtRemindersTransactions: action.payload
+            }
+        }
+    }
+
+    // Reducer cho debt reminders action
+    else if (action.type === "GET_CREATING_DEBT_REMINDERS") {
         state.debtReminders.changeList = false;
         return {
             ...state,
@@ -617,7 +694,7 @@ export default (state = initialState, action) => {
     } else if (action.type === 'READ_NOTIFICATION_SUCCESS') {
         let amountNewNotifications = state.notification.amountNewNotifications;
         let data = [];
-        state.notification.data.map(i => {
+        state.notification.data.forEach(i => {
             if (i._id === action.payload._id) {
                 amountNewNotifications--;
                 data.push(action.payload);

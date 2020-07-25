@@ -43,7 +43,6 @@ const useStyles = makeStyles(styles);
 
 const Transaction = ({
   dispatch,
-  desAccountNameFromState,
   receiversFromState,
   changeReceiversFromState,
 }) => {
@@ -129,11 +128,20 @@ const Transaction = ({
 
   // Gọi action lấy account khi account number thay đổi
   useEffect(() => {
-    if (transactionType === 0) {
-      dispatch(accountAction.getAccount(desAccountNumber));
-    } else if (transactionType === 1) {
-      dispatch(transactionAction.getInterbankAccount(desAccountNumber));
+    const setDesAccountNameFunction = async ()=>{
+      if (transactionType === 0) {
+        const internalAccount = await dispatch(accountAction.getAccount(desAccountNumber));
+        if(internalAccount.status){
+          setDesAccountName(internalAccount.data.accountName);
+        }
+      } else if (transactionType === 1) {
+        const interbankAccount = await dispatch(transactionAction.getInterbankAccount(desAccountNumber));
+        if(interbankAccount.status){
+          setDesAccountName(interbankAccount.data.accountName);
+        }
+      }
     }
+    setDesAccountNameFunction();
   }, [desAccountNumber]);
 
   // Lấy danh bạ thụ hưởng từ state
@@ -254,11 +262,6 @@ const Transaction = ({
     }
   }, [progress]);
 
-  // Set des account name khi state thay đổi
-  useEffect(() => {
-    setDesAccountName(desAccountNameFromState);
-  }, [desAccountNameFromState]);
-
   // Xử lý thêm danh bạ thụ hưởng
   const handleAddReceiver = () => {
     if (accountNameReminiscent === "") {
@@ -369,7 +372,6 @@ const Transaction = ({
                         <GridItem xs={12} sm={12} md={4}>
                           <CustomInput
                             labelText="Số tài khoản đích"
-                            id="desAccountNumber"
                             formControlProps={{
                               fullWidth: true,
                             }}
@@ -383,13 +385,11 @@ const Transaction = ({
                           />
                         </GridItem>
                         <GridItem xs={12} sm={12} md={8}>
-                          <CustomInput
-                            labelText="Tên tài khoản đích"
-                            id="desAccountName"
+                        <CustomInput
+                            // labelText="Tên tài khoản đích"
                             formControlProps={{
                               fullWidth: true,
                             }}
-                            value={desAccountName}
                             inputProps={{
                               disabled: true,
                             }}
@@ -599,11 +599,7 @@ const Transaction = ({
 };
 
 const mapStateToProps = (state) => {
-  const desAccountNameFromState = state.desAccount
-    ? state.desAccount.accountName
-    : "";
   return {
-    desAccountNameFromState,
     receiversFromState: state.receivers,
     changeReceiversFromState: state.changeReceivers,
   };

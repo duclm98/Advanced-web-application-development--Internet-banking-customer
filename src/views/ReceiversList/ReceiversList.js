@@ -40,16 +40,14 @@ const ReceiversList = ({
   }, [changeReceiversFromState]);
 
   useEffect(() => {
-    dispatch(accountAction.getAccount(accountNumber));
+    const setDesAccountNameFunction = async () => {
+      const account = await dispatch(accountAction.getAccount(accountNumber));
+      if (account.status) {
+        setAccountName(account.data.accountName);
+      }
+    };
+    setDesAccountNameFunction();
   }, [accountNumber]);
-
-  useEffect(() => {
-    if (desAccountNameFromState) {
-      setAccountName(desAccountNameFromState);
-    } else {
-      setAccountName("");
-    }
-  }, [desAccountNameFromState]);
 
   const handleAddReceiver = () => {
     if (accountNumber === "" || accountName === "") {
