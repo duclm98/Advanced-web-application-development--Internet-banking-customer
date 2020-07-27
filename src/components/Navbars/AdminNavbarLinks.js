@@ -238,6 +238,18 @@ const AdminNavbarLinks = ({
                       onClick={handleCloseProfile}
                       className={classes.dropdownItem}
                     >
+                      {account.username}
+                    </MenuItem>
+                    <MenuItem
+                      onClick={handleCloseProfile}
+                      className={classes.dropdownItem}
+                    >
+                      {account.email}
+                    </MenuItem>
+                    <MenuItem
+                      onClick={handleCloseProfile}
+                      className={classes.dropdownItem}
+                    >
                       {account.accountName}
                     </MenuItem>
                     <MenuItem
