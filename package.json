@@ -36,7 +36,8 @@
   "scripts": {
     "dev": "env-cmd -f .env.development react-scripts start",
     "start": "env-cmd -f .env.production react-scripts start",
-    "build": "CI= react-scripts build",
+    "jenkins": "env-cmd -f .env.production.jenkins react-scripts start",
+    "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
     "install:clean": "rm -rf node_modules/ && rm -rf package-lock.json && npm install && npm start",
@@ -55,7 +56,7 @@
   "bugs": {
     "url": "https://github.com/creativetimofficial/material-dashboard-react/issues"
   },
-  "homepage": "https://creativetimofficial.github.io/material-dashboard-react/#/dashboard",
+  "homepage": ".",
   "optionalDependencies": {
     "@types/googlemaps": "3.39.6",
     "@types/markerclustererplus": "2.1.33",
