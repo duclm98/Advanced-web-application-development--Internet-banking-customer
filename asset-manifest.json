@@ -1,0 +1,29 @@
+{
+  "files": {
+    "main.css": "/Advanced-web-application-development--Internet-banking-customer/static/css/main.8e9f8467.chunk.css",
+    "main.js": "/Advanced-web-application-development--Internet-banking-customer/static/js/main.daa4cf9b.chunk.js",
+    "main.js.map": "/Advanced-web-application-development--Internet-banking-customer/static/js/main.daa4cf9b.chunk.js.map",
+    "runtime-main.js": "/Advanced-web-application-development--Internet-banking-customer/static/js/runtime-main.0f7e36c2.js",
+    "runtime-main.js.map": "/Advanced-web-application-development--Internet-banking-customer/static/js/runtime-main.0f7e36c2.js.map",
+    "static/css/2.d0176e96.chunk.css": "/Advanced-web-application-development--Internet-banking-customer/static/css/2.d0176e96.chunk.css",
+    "static/js/2.ef0ac93f.chunk.js": "/Advanced-web-application-development--Internet-banking-customer/static/js/2.ef0ac93f.chunk.js",
+    "static/js/2.ef0ac93f.chunk.js.map": "/Advanced-web-application-development--Internet-banking-customer/static/js/2.ef0ac93f.chunk.js.map",
+    "index.html": "/Advanced-web-application-development--Internet-banking-customer/index.html",
+    "precache-manifest.142019bc748eb2476782246e80110da4.js": "/Advanced-web-application-development--Internet-banking-customer/precache-manifest.142019bc748eb2476782246e80110da4.js",
+    "service-worker.js": "/Advanced-web-application-development--Internet-banking-customer/service-worker.js",
+    "static/css/2.d0176e96.chunk.css.map": "/Advanced-web-application-development--Internet-banking-customer/static/css/2.d0176e96.chunk.css.map",
+    "static/css/main.8e9f8467.chunk.css.map": "/Advanced-web-application-development--Internet-banking-customer/static/css/main.8e9f8467.chunk.css.map",
+    "static/js/2.ef0ac93f.chunk.js.LICENSE.txt": "/Advanced-web-application-development--Internet-banking-customer/static/js/2.ef0ac93f.chunk.js.LICENSE.txt",
+    "static/media/sidebar-1.jpg": "/Advanced-web-application-development--Internet-banking-customer/static/media/sidebar-1.8e9f0a3c.jpg",
+    "static/media/sidebar-2.jpg": "/Advanced-web-application-development--Internet-banking-customer/static/media/sidebar-2.310509c9.jpg",
+    "static/media/sidebar-3.jpg": "/Advanced-web-application-development--Internet-banking-customer/static/media/sidebar-3.25031690.jpg",
+    "static/media/sidebar-4.jpg": "/Advanced-web-application-development--Internet-banking-customer/static/media/sidebar-4.fc9cb053.jpg"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.0f7e36c2.js",
+    "static/css/2.d0176e96.chunk.css",
+    "static/js/2.ef0ac93f.chunk.js",
+    "static/css/main.8e9f8467.chunk.css",
+    "static/js/main.daa4cf9b.chunk.js"
+  ]
+}
