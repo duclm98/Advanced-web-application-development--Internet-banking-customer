@@ -36,7 +36,7 @@
   "scripts": {
     "dev": "env-cmd -f .env.development react-scripts start",
     "start": "env-cmd -f .env.production react-scripts start",
-    "build": "react-scripts build",
+    "build": "CI= react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
     "install:clean": "rm -rf node_modules/ && rm -rf package-lock.json && npm install && npm start",
