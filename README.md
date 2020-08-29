@@ -14,3 +14,6 @@
 ## URL
 ### Môi trường production (Heroku): https://internet-banking-customer.herokuapp.com
 ### Môi trường production (Jenkins): http://34.92.149.125:3001
+## Tài khoản demo:
+### Username: duc
+### Password: 12345
